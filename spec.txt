@@ -1,0 +1,136 @@
+{
+    var builders = require('./builders.js');
+}
+
+pattern
+  = spaces "(" spaces "?<" spaces name spaces ">" spaces expr spaces ")" spaces
+  / spaces expr:expr spaces { return expr;}
+
+name = [a-zA-Z_0-9]+
+
+expr
+  = "{" spaces "}"
+        { return builders.build_matcher_object_any(); }
+  / "{" spaces head:pair spaces tail:(',' spaces pair)* spaces "}"
+        {
+            var pairMatchers = tail.reduce(function(acc, item) {
+                return acc.concat(item[2]);
+            }, [head]);
+            return builders.build_matcher_object(pairMatchers);
+        }
+  / "[" spaces "]"
+        { return builders.build_matcher_list_empty(); }
+  / "[" spaces "*" spaces "]"
+        { return builders.build_matcher_list_any(); }
+  / "[" spaces (("*" spaces ",")? spaces pattern spaces (',' spaces ('*' spaces ',')? spaces pattern)*)? spaces "]"
+  / "<" spaces ">"
+  / "<" spaces (pattern spaces (',' spaces pattern)*)? spaces ">"
+  / "**/" spaces pattern
+  / "*/" spaces pattern
+  / "_"
+        { return builders.build_matcher_any(); }
+  / "true"
+        { return builders.build_matcher_boolean(true); }
+  / "false"
+        { return builders.build_matcher_boolean(false); }
+  / "null"
+        { return builders.build_matcher_null(); }
+  / number:number
+        { return builders.build_matcher_number(parseFloat(number)); }
+  / string:string
+        { return builders.build_matcher_string(string); }
+  / regex:regex
+        { return builders.build_matcher_regex(regex); }
+  / "(" spaces "!<" spaces name spaces ">" spaces type spaces ")"
+
+pair
+  = key:string spaces ":" spaces valueMatcher:pattern
+        { var keyMatcher = builders.build_matcher_string(key);
+          return builders.build_matcher_pair(keyMatcher, valueMatcher); }
+  / key:string spaces ":" spaces '_'
+        { var keyMatcher = builders.build_matcher_string(key);
+          return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()); }
+  / "_" spaces ":" spaces valueMatcher:pattern
+        { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher); }
+
+number
+  = $(int frac exp)
+  / $(int frac)
+  / $(int exp)
+  / $(int)
+
+int
+  = digit19 digits
+  / digit
+  / "-" digit19 digits
+  / "-" digit
+
+frac
+  = "." digits
+
+exp
+  = e digits
+
+digits
+  = digit+
+
+digit
+  = [0-9]
+
+digit19
+  = [1-9]
+
+e
+  = [eE] [+-]?
+
+string
+  = "\"" chars:chars "\""
+        { return chars; }
+  
+regex
+  = "#" spaces string:string
+        { return string; }
+
+type
+  = "string"
+  / "number"
+  / "boolean"
+  / "regex"
+
+chars
+  = chars:char*
+        { return chars.join(""); }
+char
+  = codepoint
+  / "\\n"
+        { return '\n'; }
+  / "\\r"
+        { return '\r'; }
+  / "\\t"
+        { return '\t'; }
+  / "\\b"
+        { return '\b'; }
+  / "\\f"
+        { return '\f'; }
+  / "\\s"
+        { return '\s'; }
+  / "\\\\"
+        { return '\\'; }
+  / "\\\""
+        { return '\"'; }
+  / !("\"" / "\\") char:anychar
+        { return char; }
+  
+anychar
+  = .
+  
+codepoint
+  = "\\u" hexa hexa hexa hexa
+  
+hexa
+  = [0-9a-fA-F]
+
+spaces
+  = space*
+space
+  = [ \n\t\r]

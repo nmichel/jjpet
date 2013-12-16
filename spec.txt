@@ -22,7 +22,10 @@ expr
         { return builders.build_matcher_list_empty(); }
   / "[" spaces "*" spaces "]"
         { return builders.build_matcher_list_any(); }
-  / "[" spaces (("*" spaces ",")? spaces pattern spaces (',' spaces ('*' spaces ',')? spaces pattern)*)? spaces "]"
+  / "[" spaces head:item tail:tail
+        {
+            return builders.build_matcher_list([head].concat(tail));
+        }
   / "<" spaces ">"
   / "<" spaces (pattern spaces (',' spaces pattern)*)? spaces ">"
   / "**/" spaces pattern
@@ -52,6 +55,20 @@ pair
           return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()); }
   / "_" spaces ":" spaces valueMatcher:pattern
         { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher); }
+
+item
+  = "*" spaces "," spaces matcher:pattern
+        { return builders.build_matcher_find_item(matcher); }
+  / spaces matcher:pattern
+        { return builders.build_matcher_item(matcher); }
+
+tail
+  = spaces "]"
+        { return builders.build_matcher_item(builders.build_matcher_eol()); }
+  / spaces "," spaces "*" spaces "]"
+        { return []; }
+  / spaces "," spaces item:item tail:tail
+        { return [item].concat(tail); }
 
 number
   = $(int frac exp)

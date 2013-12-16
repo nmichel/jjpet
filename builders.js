@@ -128,7 +128,6 @@ function objectMatch(what, pairMatcher) {
 }
 
 function build_matcher_object(pairMatchers) {
-    var pairMatchers = pairMatchers;
     return function(what) {
         if (!isObject(what)) {
             return build_matching_result(false, []); // <== 
@@ -160,6 +159,83 @@ function build_matcher_list_any() {
     };
 };
 
+function continue_until_match(what, matcher) {
+    if (what.length == 0) {
+        return [matcher(what), []]; // <== 
+    }
+    else {
+        var head = what[0];
+        var tail = what.slice(1);
+        var res = matcher(head);
+        if (res.status) {
+            return [res, tail]; // <== 
+        }
+        else {
+            return continue_until_match(tail, matcher); // <== 
+        }
+    }
+};
+
+function build_matcher_find_item(matcher) {
+    return function(what) {
+        if (isArray(what)) {
+            return continue_until_match(what, matcher); // <== 
+        }
+        else {
+            return [build_matching_result(false, []), []]; // <== 
+        }
+    };
+};
+
+function build_matcher_item(matcher) {
+    return function(what) {
+        if (isArray(what)) {
+            if (what.length == 0) {
+                return [matcher(what), []]; // <== 
+            }
+            else {
+                var head = what[0];
+                return [matcher(head), what.slice(1)]; // <== 
+            }
+        }
+        else {
+            return [build_matching_result(false, []), []]; // <== 
+        }
+    };
+};
+
+function build_matcher_eol() {
+    return function(what) {
+        return build_matching_result(isArray(what) && what.length == 0, []); // <== 
+    }
+};
+
+function build_matcher_list(itemMatchers) {
+    return function(what) {
+        if (!isArray(what)) {
+            return build_matching_result(false, []); // <== 
+        }
+
+        var statuses = itemMatchers.reduce(function(acc, matcher) {
+            var statusAcc = acc[0];
+            var items = acc[1];
+            var res = matcher(items);
+            statusAcc.push(res[0]);
+            return [statusAcc, res[1]]; // <== 
+        }, [[], what]);
+
+        var finalStatus = statuses[0].reduce(function(acc, status) {
+            return build_matching_result(acc.status && status.status, acc.captures.concat(status.captures)); // <== 
+        }, build_matching_result(true, []));
+        
+        if (finalStatus.status) {
+            return finalStatus; // <== 
+        }
+
+        return build_matching_result(false, []); // <== 
+    };
+};
+
 return {
     build_matching_result:      build_matching_result,
     build_matcher_number:       build_matcher_number,
@@ -172,6 +248,10 @@ return {
     build_matcher_pair:         build_matcher_pair,
     build_matcher_object:       build_matcher_object,
     build_matcher_list_empty:   build_matcher_list_empty,
-    build_matcher_list_any:     build_matcher_list_any
+    build_matcher_list_any:     build_matcher_list_any,
+    build_matcher_find_item:    build_matcher_find_item,
+    build_matcher_item:         build_matcher_item,
+    build_matcher_eol:          build_matcher_eol,
+    build_matcher_list:         build_matcher_list
 };
 })();

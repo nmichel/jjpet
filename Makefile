@@ -1,7 +1,7 @@
-all: build test
-
 
 build: parser
+
+all: build test
 
 parser: spec.txt
 	./pegjs.git/bin/pegjs $<

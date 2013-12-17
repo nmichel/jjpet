@@ -1,5 +1,6 @@
-var builders = require('./builders.js');
-var parser = require('./spec.js');
+var jjpetjs = require('./lib/jjpet.js'),
+    jjpet = jjpetjs(),
+    builders = require('./lib/builders.js');
 
 var tests =
     [
@@ -162,7 +163,7 @@ var testCounter = 0;
 tests.forEach(function(pattTest) {
     var pattern = pattTest[0];
     var suite = pattTest[1];
-    var matcher = parser.parse(pattern);
+    var matcher = jjpet.compile(pattern);
     suite.forEach(function(test) {
         var expr = test[0];
         var matchingRes = matcher(JSON.parse(expr));

@@ -1,0 +1,22 @@
+{
+    "name": "jjpet",
+    "version": "0.0.1",
+    "description": "Matching JSON nodes in javascript",
+    "author": "Nicolas Michel <nicolas.michel.lava@gmail.com>",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nmichel/jjpet.git"
+    },
+    "engines": {
+        "node": "*"
+    },
+    "main": "./lib/jjpet.js",
+    "scripts": {
+        "test": "node ./test.js"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+        "pegjs": "latest"
+    }
+}

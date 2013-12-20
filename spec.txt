@@ -23,13 +23,14 @@ expr
   / "[" spaces "*" spaces "]"
         { return builders.build_matcher_list_any(); }
   / "[" spaces head:item tail:tail
-        {
-            return builders.build_matcher_list([head].concat(tail));
-        }
+        { return builders.build_matcher_list([head].concat(tail)); }
   / "<" spaces ">"
-  / "<" spaces (pattern spaces (',' spaces pattern)*)? spaces ">"
+        { return builders.build_matcher_iterable_any(); }
+  / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">"
+        { return builders.build_matcher_iterable([head].concat(tail)); }
   / "**/" spaces pattern
-  / "*/" spaces pattern
+  / "*/" spaces pattern:pattern
+        { return builders.build_matcher_iterable([pattern]); }
   / "_"
         { return builders.build_matcher_any(); }
   / "true"

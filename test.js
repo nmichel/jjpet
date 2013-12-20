@@ -42,6 +42,15 @@ var tests =
              ['"foo12345bar"', [true, []]]
          ]
         ],
+        ['#"^★★★.*★★★$"',
+         [
+             ['"★★★★★★"', [true, []]],
+             ['" ★★★★★★"', [false, []]],
+             ['"★★★★★★ "', [false, []]],
+             ['"★★★안녕하세요★★★"', [true, []]],
+             ['"★★★مرحبا★★★"', [true, []]],
+         ]
+        ],
         ['true',
          [
              ['true', [true, []]],
@@ -156,20 +165,97 @@ var tests =
             ['42', [false, []]],
             ['"[]"', [false, []]]
          ]
+        ],
+        [['[*, {_: [*, 42]}]'],
+         [
+             ['[{"foo": [42]}]', [true, []]],
+             ['[42, {"bar": 42, "foo": [42]}]', [true, []]],
+             ['[42, {"foo": ["neh", 42]}]', [true, []]],
+             ['[42, {"foo": [42, "neh"]}]', [false, []]],
+             ['[{"foo": [42]}, "neh"]', [false, []]]
+         ]   
+        ],
+
+        // Iterables
+        // 
+        [[' <    >   ', '<>'],
+         [
+             ['42', [false, []]],
+             ['false', [false, []]],
+             ['"{}"', [false, []]],
+             ['"[]"', [false, []]],
+             ['{}', [true, []]],
+             ['{"foo": 42, "bar": "quarante-deux"}', [true, []]],
+             ['[]', [true, []]],
+             ['["foo", 42, "bar", "quarante-deux", true]', [true, []]]
+         ]
+        ],
+        [['<42> ', '*/42'],
+         [
+             ['42', [false, []]],
+             ['false', [false, []]],
+             ['"{}"', [false, []]],
+             ['"[]"', [false, []]],
+             ['{}', [false, []]],
+             ['{"foo": 42, "bar": "quarante-deux"}', [true, []]],
+             ['[]', [false, []]],
+             ['["foo", 42, "bar", "quarante-deux", true]', [true, []]]
+         ]
+        ],
+        ['<{_:42}>',
+         [
+             ['[{"bar": 42}]', [true, []]]
+         ]
+        ],
+        ["<{_:[*, 42, *]}>",
+         [
+             ['[{"bar": [42]}]', [true, []]]
+         ]
+        ],
+        ['<42>',
+         [
+             ['[1, "foo", {"bar": [42]}, 42]', [true, []]]
+         ]
+        ],
+        ['<[*, 42, *]>',
+         [
+             ['[[42]]', [true, []]]
+         ]
+        ],
+        ['{_:[*, 42, *]}',
+         [
+             ['{"bar": [42]}', [true, []]]
+         ]
+        ],
+        ['<{_:[*, 42, *]}>',
+         [
+             ['{"foo": {"bar": [42]}}', [true, []]]
+         ]
+        ],
+        ['<{_:[*, 42, *]}>',
+         [
+             ['[{"bar": [42]}]', [true, []]]
+         ]
         ]
+
+        // Advanced tests
+        // 
     ];
 
 var testCounter = 0;
 tests.forEach(function(pattTest) {
-    var pattern = pattTest[0];
+    var patterns = (pattTest[0] instanceof Array) ? pattTest[0] : [pattTest[0]];
     var suite = pattTest[1];
-    var matcher = jjpet.compile(pattern);
-    suite.forEach(function(test) {
-        var expr = test[0];
-        var matchingRes = matcher(JSON.parse(expr));
-        var res = JSON.stringify(matchingRes) == JSON.stringify(builders.build_matching_result.apply(null, test[1]));
-        console.log('test ' + ++testCounter + '("' + pattern + '")'
-                    + ' | ' + expr + ' | ' + test[1] + ' | '
-                    + ' => ' + res);
-    });
+    for (var i = 0; i < patterns.length; ++i) {
+        var pattern = patterns[i];
+        var matcher = jjpet.compile(pattern);
+        suite.forEach(function(test) {
+            var expr = test[0];
+            var matchingRes = matcher(JSON.parse(expr));
+            var res = JSON.stringify(matchingRes) == JSON.stringify(builders.build_matching_result.apply(null, test[1]));
+            console.log('test ' + ++testCounter + '("' + pattern + '")'
+                        + ' | ' + expr + ' | ' + test[1] + ' | '
+                        + ' => ' + (res ? 'PASS' : 'FAILED'));
+        });
+    }
 });

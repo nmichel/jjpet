@@ -100,7 +100,22 @@ var tests =
         ],
         ['{"toto": _, _:"foo" }',
          [
-             ['{ "toto": 42, "bar":"foo"}', [true, []]]
+             ['{ "toto": 42, "bar":"foo"}', [true, []]],
+             ['{ "neh": {}, "toto": 42, "bar": "foo", "foo": false}', [true, []]]
+         ]
+        ],
+        ['{_:{_:{_:{"foo":_}}}}',
+         [
+             ['{"bar": {"bar": {"bar": {"foo": 42}}}}', [true, []]],
+             ['{"foo": {"foo": {"foo": {"bar": 42}}}}', [false, []]],
+             ['{"foo": {"foo": {"foo": {"bar": {"foo": 42}}}}}', [false, []]]
+         ]
+        ],
+        ['{_:{_:{_:{_:42}}}}',
+         [
+             ['{"bar": {"bar": {"bar": {"foo": 42}}}}', [true, []]],
+             ['{"foo": {"foo": {"foo": {"bar": 42}}}}', [true, []]],
+             ['{"foo": {"foo": {"foo": {"bar": {"foo": 42}}}}}', [false, []]]
          ]
         ],
 
@@ -130,6 +145,14 @@ var tests =
              ['[]', [false, []]],
              ['[42]', [true, []]],
              ['[42, "foo", false]', [false, []]]
+         ]
+        ],
+        ['[*, 42, *, false, *]',
+         [
+             ['[]', [false, []]],
+             ['[42]', [false, []]],
+             ['[42, "foo", false]', [true, []]],
+             ['[false, "foo", 42]', [false, []]]
          ]
         ],
         ['[42, *]',
@@ -236,6 +259,70 @@ var tests =
          [
              ['[{"bar": [42]}]', [true, []]]
          ]
+        ],
+        ['<42, false>',
+         [
+             ['[42, false]', [true, []]],
+             ['[false, 42]', [true, []]],
+             ['[{}, false, [], 42, {}]', [true, []]],
+             ['{"foo": 42, "bar": false}', [true, []]],
+             ['{"foo": false, "bar": 42}', [true, []]],
+             ['{"neh": {}, "foo": false, "bar": 42, "eos": []}', [true, []]],
+             ['[42]', [false, []]],
+             ['[false]', [false, []]],
+             ['[{}, 42]', [false, []]],
+             ['{"foo": false, "bar": []}', [false, []]],
+         ]
+        ],
+
+        // Captures
+        //
+        ['(?<cap1>42)',
+         [
+             ['42', [true, [{cap1: 42}]]]
+         ]
+        ],
+        ['(?<value>{_:[*]})',
+         [
+             ['{"foo": [42]}', [true, [{value: {foo: [42]}}]]]
+         ]
+        ],
+        ['(?<object>{_:(?<value>[*])})',
+         [
+             ['{"foo": [42]}', [true, [{object: {foo: [42]}}, {value: [42]}]]]
+         ]
+        ],
+        ['<\
+            {\
+              _:[*, (?<found><42>), *]\
+            }\
+          >',
+         [
+             ['[1, 2, {"foo": 42, "bar": [{"neh": 42}]}, 41, 42]', [true, [{found: {neh: 42}}]]]
+         ]
+        ],
+        ['<(?<c1>42), (?<c2>43)>',
+         [
+             ['[42, 43]', [true, [{c1: 42}, {c2: 43}]]],
+             ['[43, 42]', [true, [{c1: 42}, {c2: 43}]]],
+             ['["un", 43, 42, {}]', [true, [{c1: 42}, {c2: 43}]]],
+             ['{"foo": 43, "bar": 42}', [true, [{c1: 42}, {c2: 43}]]],
+             ['{"bar": 42, "foo": 43}', [true, [{c1: 42}, {c2: 43}]]],
+             ['{"neh": {}, "bar": 42, "foo": 43, "end": [42]}', [true, [{c1: 42}, {c2: 43}]]],
+             ['[42]', [false, []]],
+             ['[43]', [false, []]],
+             ['{"bar": 42, "foo": "43"}', [false, []]],
+             ['{"foo": 43}', [false, []]],
+             ['[[43], 42]', [false, []]],
+             ['{"bar": [42], "foo": "43"}', [false, []]],
+         ]
+        ],
+        ['[*, (?<c1>42), *, (?<c2>43), *]',
+         [
+             ['[42, 43]', [true, [{c1: 42}, {c2: 43}]]],
+             ['[43, 42]', [false, []]],
+             ['["un", 42, [], 43, {}]', [true, [{c1: 42}, {c2: 43}]]]
+         ]
         ]
 
         // Advanced tests
@@ -253,8 +340,9 @@ tests.forEach(function(pattTest) {
             var expr = test[0];
             var matchingRes = matcher(JSON.parse(expr));
             var res = JSON.stringify(matchingRes) == JSON.stringify(builders.build_matching_result.apply(null, test[1]));
+//            console.log('JSON.stringify(matchingRes)', JSON.stringify(matchingRes));
             console.log('test ' + ++testCounter + '("' + pattern + '")'
-                        + ' | ' + expr + ' | ' + test[1] + ' | '
+                        + ' | ' + expr + ' | ' + JSON.stringify(test[1]) + ' | '
                         + ' => ' + (res ? 'PASS' : 'FAILED'));
         });
     }

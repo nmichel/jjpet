@@ -3,10 +3,12 @@
 }
 
 pattern
-  = spaces "(" spaces "?<" spaces name spaces ">" spaces expr spaces ")" spaces
-  / spaces expr:expr spaces { return expr;}
+  = spaces "(" spaces "?<" spaces name:name spaces ">" spaces matcher:expr spaces ")" spaces
+        { return builders.build_matcher_capture(name, matcher); }
+  / spaces expr:expr spaces
+        { return expr; }
 
-name = [a-zA-Z_0-9]+
+name = $([a-zA-Z_0-9]+)
 
 expr
   = "{" spaces "}"
@@ -27,7 +29,12 @@ expr
   / "<" spaces ">"
         { return builders.build_matcher_iterable_any(); }
   / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">"
-        { return builders.build_matcher_iterable([head].concat(tail)); }
+        {
+            var matchers = tail.reduce(function(acc, item) {
+                return acc.concat(item[2]);
+            }, [head]);
+            return builders.build_matcher_iterable(matchers);
+        }
   / "**/" spaces pattern
   / "*/" spaces pattern:pattern
         { return builders.build_matcher_iterable([pattern]); }

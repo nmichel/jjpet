@@ -35,7 +35,8 @@ expr
             }, [head]);
             return builders.build_matcher_iterable(matchers);
         }
-  / "**/" spaces pattern
+  / "**/" spaces pattern:pattern
+        { return builders.build_matcher_descendant([pattern]); }
   / "*/" spaces pattern:pattern
         { return builders.build_matcher_iterable([pattern]); }
   / "_"

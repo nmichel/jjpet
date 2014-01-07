@@ -275,6 +275,56 @@ var tests =
          ]
         ],
 
+        // descenadnt
+        // 
+
+        ['**/42',
+         [
+             ['[42]', [true, []]],
+             ['{"foo": 42}', [true, []]],
+             ['{"bar": {}, "foo": 42}', [true, []]],
+             ['["foo", 42]', [true, []]],
+             ['[[{"bar": [{"foo": ["bar", 42, 13]}]}]]', [true, []]],
+             ['42', [false, []]],
+             ['[]', [false, []]],
+             ['{}', [false, []]]
+         ]
+        ],
+        ['**/[*, 42]',
+         [
+             ['[]', [false, []]],
+             ['{}', [false, []]],
+             ['[42]', [false, []]],
+             ['["foo", [42]]', [true, []]],
+             ['{"foo" : [42]}', [true, []]],
+             ['[[{"bar": [{"foo": ["this one matches", 42]}]}], "next does not match", 42]', [true, []]]
+
+         ]
+        ],
+        ["**/{_:42}",
+         [
+             ['[{"bar": 42}]', [true, []]],
+             ['[{"bar": ["42", \
+                         {"foo": true, \
+                          "bar": ["A", "B", {"neh": 42}, false]}, \
+                         true]}]', [true, []]]
+         ]
+        ],
+        ['[*, "mark", **/**/42, "END"]',
+         [
+             ['42', [false, []]],
+             ['[42]', [false, []]],
+             ['[{}, "mark", 42]', [false, []]],
+             ['[[], "mark", ["something", true, 42, "at the end"]]', [false, []]],
+             ['[false, "mark", ["something", [true, 42], "at the end"]]', [false, []]],
+             ['[{"foo": []}, "mark", ["something", [true, 42], "at the end"], "inbetween", "END"]', [false, []]],
+             ['[true, "mark", ["something", [true, 42], "at the end"], "END"]', [true, []]],
+             ['[true, "mark", ["something", {"true": 42}, "at the end"], "END"]', [true, []]],
+             ['[true, "mark", ["something", [{"true": 42}], "at the end"], "END"]', [true, []]],
+             ['[true, "mark", {"something": [{"true": 42}], "at the end": null}, "END"]', [true, []]]
+         ]
+        ],
+
         // Captures
         //
         ['(?<cap1>42)',
@@ -323,6 +373,11 @@ var tests =
              ['[43, 42]', [false, []]],
              ['["un", 42, [], 43, {}]', [true, [{c1: 42}, {c2: 43}]]]
          ]
+        ],
+        ['[*, "mark", **/[(?<cap_iter>*/42), (?<cap_struct>{_:"foo"}), *], "END"]',
+         [
+             ['[true, "mark", ["something", [{"true": 42}, {"bar": "foo"}, "the world\'send"]], "END"]', [true, [{"cap_iter": {"true": 42}}, {"cap_struct":{"bar":"foo"}}]]]
+         ]
         ]
 
         // Advanced tests
@@ -340,7 +395,7 @@ tests.forEach(function(pattTest) {
             var expr = test[0];
             var matchingRes = matcher(JSON.parse(expr));
             var res = JSON.stringify(matchingRes) == JSON.stringify(builders.build_matching_result.apply(null, test[1]));
-//            console.log('JSON.stringify(matchingRes)', JSON.stringify(matchingRes));
+            // console.log('JSON.stringify(matchingRes)', JSON.stringify(matchingRes));
             console.log('test ' + ++testCounter + '("' + pattern + '")'
                         + ' | ' + expr + ' | ' + JSON.stringify(test[1]) + ' | '
                         + ' => ' + (res ? 'PASS' : 'FAILED'));

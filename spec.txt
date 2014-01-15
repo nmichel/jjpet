@@ -53,7 +53,8 @@ expr
         { return builders.build_matcher_string(string); }
   / regex:regex
         { return builders.build_matcher_regex(regex); }
-  / "(" spaces "!<" spaces name spaces ">" spaces type spaces ")"
+  / "(" spaces "!<" spaces name:name spaces ">" spaces typename:type spaces ")"
+        { return builders.build_matcher_inject(name, typename); }
 
 pair
   = key:string spaces ":" spaces valueMatcher:pattern

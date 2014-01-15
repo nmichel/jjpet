@@ -1,5 +1,4 @@
-var jjpetjs = require('./lib/jjpet.js'),
-    jjpet = jjpetjs(),
+var jjpet = require('./lib/jjpet.js'),
     builders = require('./lib/builders.js');
 
 var tests =
@@ -378,10 +377,51 @@ var tests =
          [
              ['[true, "mark", ["something", [{"true": 42}, {"bar": "foo"}, "the world\'send"]], "END"]', [true, [{"cap_iter": {"true": 42}}, {"cap_struct":{"bar":"foo"}}]]]
          ]
-        ]
+        ],
 
-        // Advanced tests
+        // Injection
         // 
+        ['(!<iv1>boolean)',
+         [
+             ['true', [true, []], {iv1: true}],
+             ['false', [true, []], {iv1: false}],
+             ['false', [false, []], {iv1: true}],
+             ['0', [false, []], {iv1: false}],
+             ['1', [false, []], {iv1: true}],
+             ['true', [false, []], {iv1: 1}],
+             ['false', [false, []], {iv1: 0}]
+         ]],
+        ['(!<iv1>string)',
+         [
+             ['"foo"', [true, []], {iv1: "foo"}],
+             ['"foo"', [true, []], {iv1: new String("foo")}],
+             ['"bar"', [false, []], {iv1: "foo"}]
+         ]],
+        ['(!<iv1>number)',
+         [
+             ['42', [true, []], {iv1: 42}],
+             ['42.0', [true, []], {iv1: 42}],
+             ['42', [true, []], {iv1: 42.0}],
+             ['42.0e10', [true, []], {iv1: 42e10}],
+             ['"42"', [false, []], {iv1: 42}]
+         ]],
+        ['(!<iv1>regex)',
+         [
+             ['"foo"', [true, []], {iv1: new RegExp("foo")}],
+             ['"foobar"', [true, []], {iv1: new RegExp("foo")}],
+             ['"foonehbarbar"', [true, []], {iv1: new RegExp("foo.*bar")}],
+             ['"foonehbarbar"', [true, []], {iv1: new RegExp("^foo.*bar$")}],
+             ['"foobar"', [true, []], {iv1: new RegExp("^foo.*bar$")}],
+             ['"HfoonehbarbarT"', [false, []], {iv1: new RegExp("^foo.*bar$")}]
+         ]
+        ],
+        ['[*, "mark", **/[(?<cap_iter>*/(!<ivnum>number)), (?<cap_struct>{_:(!<ivstring>string)}), *], "END"]',
+         [
+             ['[true, "mark", ["something", [{"true": 42}, {"bar": "foo"}, "the world\'send"]], "END"]', [true, [{"cap_iter": {"true": 42}}, {"cap_struct":{"bar":"foo"}}]], {ivnum: 42, ivstring: "foo"}],
+             ['[true, "mark", ["something", [{"true": false}, {"bar": "foo"}, "the world\'send"]], "END"]', [false, []], {ivnum: 42, ivstring: "foo"}],
+             ['[true, "mark", ["something", [{"true": 42}, {"bar": "neh"}, "the world\'send"]], "END"]', [false, []], {ivnum: 42, ivstring: "foo"}]
+         ]
+        ]
     ];
 
 var testCounter = 0;
@@ -393,7 +433,7 @@ tests.forEach(function(pattTest) {
         var matcher = jjpet.compile(pattern);
         suite.forEach(function(test) {
             var expr = test[0];
-            var matchingRes = matcher(JSON.parse(expr));
+            var matchingRes = jjpet.run(JSON.parse(expr), matcher, test[2]);
             var res = JSON.stringify(matchingRes) == JSON.stringify(builders.build_matching_result.apply(null, test[1]));
             // console.log('JSON.stringify(matchingRes)', JSON.stringify(matchingRes));
             console.log('test ' + ++testCounter + '("' + pattern + '")'

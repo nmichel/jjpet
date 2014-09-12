@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
     function build_matching_result(status, captures) {
         return {status: status,
@@ -319,62 +319,65 @@ module.exports = (function() {
         };
     }
 
-    function deep_continue_until_value_match(what, matcher, params) {
+    function deep_continue_until_value_match(what, matcher, params, flags) {
         var fun = isObject(what) ?
             deep_continue_until_value_match_object :
             deep_continue_until_value_match_list;
-        return fun(what, matcher, params);
+        return fun(what, matcher, params, flags);
     }
 
-    function deep_continue_until_value_match_object(what, matcher, params) {
+    function deep_continue_until_value_match_object(what, matcher, params, flags) {
+        var acc = {};
         for (var k in what) {
             var value = what[k];
             var res = matcher(value, params);
-            if (res.status) {
+
+            if (res.status && !flags) {
                 return res; // <== 
             }
-            else {
-                if (!isObject(value) && !isArray(value)) {
-                    continue; // <== 
-                }
-                var deepRes = deep_continue_until_value_match(value, matcher, params);
-                if (deepRes.status) {
-                    return deepRes; // <== 
-                }
-                else {
-                    continue; // <== 
-                }
+
+            melt(acc, res.captures);
+            if (!isObject(value) && !isArray(value)) {
+                continue; // <== 
             }
+            var deepRes = deep_continue_until_value_match(value, matcher, params, flags);
+            if (deepRes.status && !flags) {
+                return deepRes; // <== 
+            }
+            
+            melt(acc, deepRes.captures);
         }
 
-        return build_matching_result(false, {}); // <== 
+        var matched = Object.keys(acc).length > 0;
+        return build_matching_result(matched, acc); // <== 
     }
 
-    function deep_continue_until_value_match_list(what, matcher, params) {
+    function deep_continue_until_value_match_list(what, matcher, params, flags) {
+        var acc = {};
         for (var k = 0; k < what.length; ++k) {
             var value = what[k];
             var res = matcher(value, params);
-            if (res.status) {
+            if (res.status && !flags) {
                 return res; // <== 
             }
-            else {
-                if (!isObject(value) && !isArray(value)) {
-                    continue; // <== 
-                }
-                var deepRes = deep_continue_until_value_match(value, matcher, params);
-                if (deepRes.status) {
-                    return deepRes; // <== 
-                }
-                else {
-                    continue; // <== 
-                }
+
+            melt(acc, res.captures);
+            if (!isObject(value) && !isArray(value)) {
+                continue; // <== 
             }
+            var deepRes = deep_continue_until_value_match(value, matcher, params, flags);
+            if (deepRes.status && !flags) {
+                return deepRes; // <== 
+            }
+
+            melt(acc, deepRes.captures);
         }
 
-        return build_matching_result(false, {}); // <== 
+        var matched = Object.keys(acc).length > 0;
+        return build_matching_result(matched, acc); // <== 
     }
 
-    function build_matcher_descendant(valueMatchers) {
+    function build_matcher_descendant(valueMatchers, flags) {
         return function(what, params) {
             if (!isObject(what) && !isArray(what)) {
                 return build_matching_result(false, {}); // <== 
@@ -384,7 +387,7 @@ module.exports = (function() {
                 deep_continue_until_value_match_object :
                 deep_continue_until_value_match_list;
             var results = valueMatchers.map(function(matcher) {
-                return fun(what, matcher, params); // <== 
+                return fun(what, matcher, params, flags); // <== 
             });
 
             var acc = results.reduce(function(acc, matchRes) {
@@ -502,25 +505,7 @@ module.exports = (function() {
     };
 })();
 
-},{}],"yQ6E8h":[function(require,module,exports){
-module.exports = (function() {
-    var builders = require('./builders.js');
-    var parser = require('./spec.js');
-    return {
-        compile: function(pattern) {
-            var matcher = parser.parse(pattern);
-            return matcher; // <== 
-        },
-        
-        run: function(json, matcher, params) {
-            return matcher(json, params || {}); // <== 
-        }
-    }
-})();
-
-},{"./builders.js":1,"./spec.js":4}],"jjpet":[function(require,module,exports){
-module.exports=require('yQ6E8h');
-},{}],4:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -3009,4 +2994,20 @@ module.exports = (function() {
   };
 })();
 
-},{"./builders.js":1}]},{},[])
+},{"./builders.js":1}],"jjpet":[function(require,module,exports){
+module.exports = (function() {
+    var builders = require('./builders.js');
+    var parser = require('./spec.js');
+    return {
+        compile: function(pattern) {
+            var matcher = parser.parse(pattern);
+            return matcher; // <== 
+        },
+        
+        run: function(json, matcher, params) {
+            return matcher(json, params || {}); // <== 
+        }
+    }
+})();
+
+},{"./builders.js":1,"./spec.js":2}]},{},[]);

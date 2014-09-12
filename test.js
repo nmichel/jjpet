@@ -425,6 +425,27 @@ var tests =
              ['[true, "mark", ["something", [{"true": false}, {"bar": "foo"}, "the world\'send"]], "END"]', [false, {}], {ivnum: 42, ivstring: "foo"}],
              ['[true, "mark", ["something", [{"true": 42}, {"bar": "neh"}, "the world\'send"]], "END"]', [false, {}], {ivnum: 42, ivstring: "foo"}]
          ]
+        ],
+        ['*/(?<node>*/(?<val>_)/g)/g',
+         [
+             ['[1, 2, 3]', [false, {}], {}],
+             ['[[1, 2, 3]]',
+              [true, {val: [1, 2, 3],
+                      node: [[1, 2, 3]]}],
+              {}],
+             ['{}', [false, {}], {}],
+             ['[{}]', [false, {}], {}],
+             ['[{"a":42}]', [true, {val: [42],
+                                    node: [{a:42}]}],
+              {}],
+             ['{"a":[]}', [false, {}], {}],
+             ['{"a": [1, 2, 3], "b": [4, 5]}', [true, {val: [1, 2, 3, 4, 5], node: [[1, 2, 3], [4, 5]]}], {}],
+             ['["hello", {"a": "an a", "b": "a b", "c": "a c"}, [1, 2, {"3":3}], "world"]',
+              [true, {val: ['an a', 'a b', 'a c', 1, 2, {"3": 3}],
+                      node: [{a: 'an a', b: 'a b', c: 'a c'},
+                             [1, 2, {'3': 3}]]}],
+              {}]
+         ]
         ]
     ];
 

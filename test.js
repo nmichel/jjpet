@@ -426,6 +426,47 @@ var tests =
              ['[true, "mark", ["something", [{"true": 42}, {"bar": "neh"}, "the world\'send"]], "END"]', [false, {}], {ivnum: 42, ivstring: "foo"}]
          ]
         ],
+        ['[*, <42, #"foo">/g]',
+         [
+             ['["i", [42, "foo"]]', [true, {}], {}]
+             ,['["i", ["barfoo", 42]]', [true, {}], {}]
+             ,['["i", [{}, "barfoo", "whatever", 42, "neh"]]', [true, {}], {}]
+         ]
+        ],
+        // ----- global shallow match
+        // 
+        // check non capturing behaviour (must behave as non-global shallow matching)
+        // 
+        ['<42, "foo">/g',
+         [
+             ['[42, "foo"]', [true, {}], {}]
+             ,['["foo", 42]', [true, {}], {}] // order does not matter
+             ,['["foo", "42"]', [false, {}], {}] // every conditions must be met
+             ,['["header", "foo", 34, 42]', [true, {}], {}] // non matching items do not matter
+             ,['{"header": "header value", "foo key": "foo", "thirtyfor": 34, "fortytwo": 42}', [true, {}], {}] // works for list and object
+             ,['{"header": "header value", "foo key": "foo value", "thirtyfor": 34, "fortytwo": 42}', [false, {}], {}] // every conditions must be matched
+         ]
+        ],
+        // check capturing behaviour
+        //
+        ['<(?<forty2>42), "foo">/g',
+         [
+             ['[42, "foo"]', [true, {forty2: [42]}], {}] // capture 
+             ,['["foo", 42]', [true, {forty2: [42]}], {}] // order does not matter
+             ,['[42, "foo", 42]', [true, {forty2: [42, 42]}], {}] // capture all matching items
+             ,['{"forty2": 42, "foo": "foo", "42": 42}', [true, {forty2: [42, 42]}], {}] // work for objects too
+         ]
+        ],
+        ['<(?<foo>"foo"), (?<forty2>42)>/g',
+         [
+             ['[42, "foo"]', [true, {foo: ["foo"], forty2: [42]}], {}] // capture 
+             ,['["foo", 42]', [true, {foo: ["foo"], forty2: [42]}], {}] // order does not matter
+             ,['[42, "foo", 42]', [true, {foo: ["foo"], forty2: [42, 42]}], {}] // capture all matching items
+             ,['{"forty2": 42, "foo": "foo", "42": 42}', [true, {foo: ["foo"], forty2: [42, 42]}], {}] // work for objects too
+         ]
+        ],
+        // check shorten form
+        // 
         ['*/(?<node>*/(?<val>_)/g)/g',
          [
              ['[1, 2, 3]', [false, {}], {}],
@@ -447,11 +488,41 @@ var tests =
               {}]
          ]
         ],
-        ['**/(?<fortytwo>42)/g',
+        // ----- deep global match
+        // 
+        // check capturing behaviour
+        //
+        ['**/(?<forty2>42)/g',
          [
-             ['[42, 42, [42], {"42":42}, [{"42":[42]}]]',
-              [true, {fortytwo: [42, 42, 42, 42, 42]}],
-              {}]
+             ['[42, "foo"]', [true, {forty2: [42]}], {}] // capture 
+             ,['["foo", 42]', [true, {forty2: [42]}], {}] // order does not matter
+             ,['[42, "foo", 42]', [true, {forty2: [42, 42]}], {}] // capture all matching items
+             ,['{"forty2": 42, "foo": "foo", "42": 42}', [true, {forty2: [42, 42]}], {}] // work for objects too
+             ,['[42, 42, [42], {"42":42}, [{"42":[42]}]]',
+               [true, {forty2: [42, 42, 42, 42, 42]}],
+               {}],
+         ]
+        ],
+        ['<**/(?<foo>#"foo")>/g',
+         [
+             ['["foo"]', [false, {}], {}] // first level list cannot match
+             ,['[["nehfoo"]]', [true, {foo: ["nehfoo"]}], {}] // nested list matches
+             ,['[[[["foobar"]]]]', [true, {foo: ["foobar"]}], {}] // very nested list matches
+             ,['{"fookey":"foo"}', [false, {}], {}] // first level object cannot match
+             ,['[{"fookey":"foo"}]', [true, {foo: ["foo"]}], {}] // nested object matches
+             ,['[[{"key": [{"fookey":"foo"}]}]]', [true, {foo: ["foo"]}], {}] // very nested object matches
+             
+         ]
+        ],
+        ['<(?<node>**/(?<foo>#"foo")/g)>/g',
+         [
+             ['[{"deep": [{"whatever": "nehfoo"}]}, \
+                {"a":"non-fOo", "fkey": "ifoo"}, \
+                {"fookey":"foo"}]', [true, {foo: ['nehfoo', 'ifoo', 'foo'],
+                                            node: [{deep: [{whatever: 'nehfoo'}]},
+                                                   {a: 'non-fOo', fkey: 'ifoo'},
+                                                   {fookey: 'foo'}]}],
+              {}] // very nested object matches, and all matching items are captured
          ]
         ]
     ];

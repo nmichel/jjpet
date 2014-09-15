@@ -28,7 +28,7 @@ expr
         { return builders.build_matcher_list([head].concat(tail)); }
   / "<" spaces ">"
         { return builders.build_matcher_iterable_any(); }
-  / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "/g" ">"
+  / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">/g"
         {
             var matchers = tail.reduce(function(acc, item) {
                 return acc.concat(item[2]);

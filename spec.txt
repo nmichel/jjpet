@@ -24,8 +24,17 @@ expr
         { return builders.build_matcher_list_empty(); }
   / "[" spaces "*" spaces "]"
         { return builders.build_matcher_list_any(); }
-  / "[" spaces head:item tail:tail
-        { return builders.build_matcher_list([head].concat(tail)); }
+  / "[" spaces s:span spaces "]"
+        {
+          s.push(builders.build_matcher_item(builders.build_matcher_eol()));
+          return builders.build_matcher_list(s);
+        }
+  / "[" spaces s:span spaces "," spaces "*" spaces "]"
+        {return builders.build_matcher_list(s)}
+  / "[" spaces s:span spaces "," spaces t:tail
+        { return builders.build_matcher_list(s.concat(t)); }
+  / "[" spaces t:tail
+        { return builders.build_matcher_list(t); }
   / "<" spaces ">"
         { return builders.build_matcher_iterable_any(); }
   / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">/g"
@@ -77,19 +86,38 @@ pair
   / "_" spaces ":" spaces valueMatcher:pattern
         { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher); }
 
-item
-  = "*" spaces "," spaces matcher:pattern
-        { return builders.build_matcher_find_item(matcher); }
-  / spaces matcher:pattern
-        { return builders.build_matcher_item(matcher); }
+span
+  = h:pattern t:(spaces "," spaces pattern)*
+        {
+          return t.reduce(function(acc, item) {
+            acc.push(builders.build_matcher_item(item[3]));
+            return acc;
+          }, [builders.build_matcher_item(h)]);
+        }
 
 tail
-  = spaces "]"
-        { return builders.build_matcher_item(builders.build_matcher_eol()); }
-  / spaces "," spaces "*" spaces "]"
-        { return []; }
-  / spaces "," spaces item:item tail:tail
-        { return [item].concat(tail); }
+  = h:span_find t:(spaces "," spaces span_find)* spaces loose:("," spaces"*" spaces)? "]"
+        {
+          var m = t.reduce(function(acc, item) {
+            acc.push(item[3]);
+            return acc;
+          }, [h]);
+
+          if (loose == null) {
+            var eol = builders.build_matcher_item(builders.build_matcher_eol());
+            m[m.length-1].push(eol);
+          }
+          return m.reduce(function(acc, item) {
+            acc.push(builders.build_matcher_find_item(item));
+            return acc;
+          }, []);
+        }
+
+span_find
+  = "*" spaces "," spaces s:span
+        {
+          return s;
+        }
 
 number
   = $(int frac exp)

@@ -123,72 +123,138 @@ var tests =
         ['[]',
          [
              ['[]', [true, {}]],
-             ['[42]', [false, {}]],
-             ['{}', [false, {}]],
-             ['42', [false, {}]],
-             ['"[]"', [false, {}]]
+             ,['[42]', [false, {}]]
+             ,['42', [false, {}]]
+             ,['"[]"', [false, {}]]
+             ,['{"foo": 42}', [false, {}]]
          ]
         ],
         ['[*]',
          [
              ['[]', [true, {}]],
-             ['[42]', [true, {}]],
-             ['[42, "foo", false]', [true, {}]],
-             ['{}', [false, {}]],
-             ['42', [false, {}]],
-             ['"[]"', [false, {}]]
+             ,['[42]', [true, {}]]
+             ,['[42, "foo", false]', [true, {}]]
+             ,['42', [false, {}]]
+             ,['"[]"', [false, {}]]
+             ,['{}', [false, {}]]
+             ,['{"foo": 42}', [false, {}]]
          ]
         ],
         ['[42]',
          [
-             ['[]', [false, {}]],
-             ['[42]', [true, {}]],
-             ['[42, "foo", false]', [false, {}]]
+             ['42', [false, {}]]
+             ,['[]', [false, {}]]
+             ,['[42]', [true, {}]]
+             ,['[42, "foo", false]', [false, {}]]
+             ,['["foo", false, 42]', [false, {}]]
+             ,['{}', [false, {}]]
+             ,['{"foo": 42}', [false, {}]]
          ]
         ],
-        ['[*, 42, *, false, *]',
-         [
-             ['[]', [false, {}]],
-             ['[42]', [false, {}]],
-             ['[42, "foo", false]', [true, {}]],
-             ['[false, "foo", 42]', [false, {}]]
-         ]
+        ['[42, "foo"]',
+            [
+                ['[]', [false, {}]],
+                ['[42]', [false, {}]],
+                ['[42, true]', [false, {}]],
+                ['[true, "foo"]', [false, {}]],
+                ['["foo", 42]', [false, {}]],
+                ['[42, "foo"]', [true, {}]],
+                ['[42, "foo", true]', [false, {}]],
+                ['[false, 42, "foo"]', [false, {}]],
+                ['[42, {}, "foo"]', [false, {}]],
+            ]
         ],
         ['[42, *]',
-         [
-             ['[]', [false, {}]],
-             ['[42]', [true, {}]],
-             ['[42, "foo"]', [true, {}]],
-             ['["foo", 42]', [false, {}]],
-             ['{}', [false, {}]],
-             ['42', [false, {}]],
-             ['"[]"', [false, {}]]
-         ]
+            [
+                ['[]', [false, {}]],
+                ,['"[]"', [false, {}]]
+                ,['42', [false, {}]]
+                ,['[42]', [true, {}]]
+                ,['[42, "foo"]', [true, {}]]
+                ,['["foo", 42]', [false, {}]]
+                ,['[42, "foo", {}]', [true, {}]]
+            ]
         ],
         ['[*, 42]',
-         [
-            ['[]', [false, {}]],
-            ['[42]', [true, {}]],
-            ['[42, "foo"]', [false, {}]],
-            ['["foo", 42]', [true, {}]],
-            ['{}', [false, {}]],
-            ['42', [false, {}]],
-            ['"[]"', [false, {}]]
-         ]
+            [
+                ['[]', [false, {}]]
+                ,['{"foo": 42}', [false, {}]]
+                ,['"[42]"', [false, {}]]
+                ,['42', [false, {}]]
+                ,['[42]', [true, {}]]
+                ,['[true, 42]', [true, {}]]
+                ,['[42, 42]', [true, {}]]
+                ,['[42, false]', [false, {}]]
+                ,['[true, 42, false, 42]', [true, {}]]
+                ,['[true, 42, false, 41]', [false, {}]]
+            ]
         ],
         ['[*, 42, *]',
-         [
-            ['[]', [false, {}]],
-            ['[42]', [true, {}]],
-            ['[42, "foo"]', [true, {}]],
-            ['["foo", 42]', [true, {}]],
-            ['["foo", 42, "foo"]', [true, {}]],
-            ['{}', [false, {}]],
-            ['42', [false, {}]],
-            ['"[]"', [false, {}]]
+            [
+                ['[]', [false, {}]]
+                ,['"[]"', [false, {}]]
+                ,['{"foo": 42}', [false, {}]],
+                ,['42', [false, {}]]
+                ,['[42]', [true, {}]]
+                ,['[42, "foo"]', [true, {}]]
+                ,['[true, 42]', [true, {}]]
+                ,['[42, 42]', [true, {}]]
+                ,['[42, false]', [true, {}]]
+                ,['["foo", 42, "foo"]', [true, {}]]
+            ]
+        ],
+        ['[42, *, false]',
+            [
+                ['[42, false]', [true, {}]]
+                ,['[42, "foo", false]', [true, {}]]
+                ,['[42, "foo", [], false]', [true, {}]]
+                ,['[42]', [false, {}]]
+                ,['[42, true]', [false, {}]]
+                ,['[false]', [false, {}]]
+                ,['["foo", false]', [false, {}]]
+                ,['[false, 42]', [false, {}]]
+                ,['["foo", 42, false]', [false, {}]]
+                ,['[42, false, "foo"]', [false, {}]]
+            ]
+        ],
+        ['[*, 42, *, false, *]',
+         [  
+                ['[]', [false, {}]]
+                ,['[42]', [false, {}]]
+                ,['[42, false]', [true, {}]]
+                ,['[42, false, "foo"]', [true, {}]]
+                ,['[false, 42]', [false, {}]]
+                ,['[false, "foo", 42]', [false, {}]]
+                ,['[42, "foo", false]', [true, {}]]
+                ,['[42, "foo", "foo", "foo", false]', [true, {}]]
+                ,['[[], 42, false]', [true, {}]]
+                ,['[[], [], "foo", 42, false]', [true, {}]]
+                ,['[42, false, "foo"]', [true, {}]]
+                ,['[42, false, "foo", "foo", {}]', [true, {}]]
+                ,['[{"foo": []}, 42, false, ["foo"]]', [true, {}]]
+                ,['[42, [42, false], true]', [false, {}]]
+                ,['[{"foo": [42, false]}]', [false, {}]]
          ]
         ],
-        [['[*, {_: [*, 42]}]'],
+        ['["foo", *, "foo", false, *, true]',
+            [
+                ['["foo", "foo", false, true]', [true, {}]]
+
+                ,['["foo", false, true]', [false, {}]]
+                ,['["foo", "foo", true]', [false, {}]]
+                ,['["foo", "foo", false]', [false, {}]]
+                ,['["neh", "foo", false, true]', [false, {}]]
+                ,['["neh", "foo", "foo", false, true]', [false, {}]]
+                ,['["foo", "foo", false, true, false]', [false, {}]]
+
+                ,['["foo", "foo", "foo", false, true]', [true, {}]]
+                ,['["foo", "foo", false, {}, true]', [true, {}]]
+                ,['["foo", "foo", false, true, true]', [true, {}]]
+                ,['["foo", "foo", "foo", false, false, true, true]', [true, {}]]
+                ,['["foo", "foo", false, "foo", false, false, true, true]', [true, {}]]
+            ]
+        ],
+        ['[*, {_: [*, 42]}]',
          [
              ['[{"foo": [42]}]', [true, {}]],
              ['[42, {"bar": 42, "foo": [42]}]', [true, {}]],

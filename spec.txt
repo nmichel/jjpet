@@ -37,6 +37,20 @@ expr
         { return builders.build_matcher_list(t); }
   / "<" spaces ">"
         { return builders.build_matcher_iterable_any(); }
+  / "<!" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "!>/g"
+        {
+            var matchers = tail.reduce(function(acc, item) {
+                return acc.concat(item[2]);
+            }, [head]);
+            return builders.build_matcher_descendant(matchers, true);
+        }
+  / "<!" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "!>"
+        {
+            var matchers = tail.reduce(function(acc, item) {
+                return acc.concat(item[2]);
+            }, [head]);
+            return builders.build_matcher_descendant(matchers, false);
+        }
   / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">/g"
         {
             var matchers = tail.reduce(function(acc, item) {
@@ -51,14 +65,6 @@ expr
             }, [head]);
             return builders.build_matcher_iterable(matchers, false);
         }
-  / "**/" spaces pattern:pattern "/g"
-        { return builders.build_matcher_descendant([pattern], true); }
-  / "**/" spaces pattern:pattern
-        { return builders.build_matcher_descendant([pattern], false); }
-  / "*/" spaces pattern:pattern "/g"
-        { return builders.build_matcher_iterable([pattern], true); }
-  / "*/" spaces pattern:pattern
-        { return builders.build_matcher_iterable([pattern], false); }
   / "_"
         { return builders.build_matcher_any(); }
   / "true"

@@ -101,11 +101,14 @@ var tests =
          [
              ['{ "toto": 42, "bar":"foo"}', [true, {}]],
              ['{ "neh": {}, "toto": 42, "bar": "foo", "foo": false}', [true, {}]]
+             ,['{ "neh": {}, "toto": 42, "bar": "foO", "foo": false}', [false, {}]]
+             ,['{ "neh": {}, "totO": 42, "bar": "foo", "foo": false}', [false, {}]]
          ]
         ],
         ['{_:{_:{_:{"foo":_}}}}',
          [
-             ['{"bar": {"bar": {"bar": {"foo": 42}}}}', [true, {}]],
+             ['{"bar": {"bar": {"bar": {"foo": 42}}}}', [true, {}]]
+             ,['{"bar": {"bar": {"foo": 42}}}', [false, {}]],
              ['{"foo": {"foo": {"foo": {"bar": 42}}}}', [false, {}]],
              ['{"foo": {"foo": {"foo": {"bar": {"foo": 42}}}}}', [false, {}]]
          ]
@@ -114,7 +117,16 @@ var tests =
          [
              ['{"bar": {"bar": {"bar": {"foo": 42}}}}', [true, {}]],
              ['{"foo": {"foo": {"foo": {"bar": 42}}}}', [true, {}]],
+             ['{"foo": {"foo": {"foo": {"bar": false, "foo": 42}}}}', [true, {}]],
              ['{"foo": {"foo": {"foo": {"bar": {"foo": 42}}}}}', [false, {}]]
+             ,['{"foo": {"foo": {"bar": 42}}}', [false, {}]],
+             ,['{"foo": {"foo": {"foo": ["foo", 42]}}}', [false, {}]]
+         ]
+        ],
+        ['{_:[*, 42, *]}',
+         [
+             ['{"bar": [42]}', [true, {}]],
+             ['[[42]]', [false, {}]]
          ]
         ],
 
@@ -278,51 +290,45 @@ var tests =
              ['["foo", 42, "bar", "quarante-deux", true]', [true, {}]]
          ]
         ],
-        [['<42> ', '*/42'],
+        ['<42> ',
          [
              ['42', [false, {}]],
-             ['false', [false, {}]],
              ['"{}"', [false, {}]],
              ['"[]"', [false, {}]],
              ['{}', [false, {}]],
-             ['{"foo": 42, "bar": "quarante-deux"}', [true, {}]],
-             ['[]', [false, {}]],
-             ['["foo", 42, "bar", "quarante-deux", true]', [true, {}]]
+             ['[]', [false, {}]]
+             ,['[42]', [true, {}]]
+             ,['{"neh": 42}', [true, {}]],
+             ,['{"foo": 42, "bar": "quarante-deux"}', [true, {}]]
+             ,['[1, "foo", {"bar": [42]}, false]', [false, {}]]
+             ,['["foo", 42, "bar", "quarante-deux", true]', [true, {}]]
          ]
         ],
         ['<{_:42}>',
          [
-             ['[{"bar": 42}]', [true, {}]]
-         ]
-        ],
-        ["<{_:[*, 42, *]}>",
-         [
-             ['[{"bar": [42]}]', [true, {}]]
-         ]
-        ],
-        ['<42>',
-         [
-             ['[1, "foo", {"bar": [42]}, 42]', [true, {}]]
+            ['[{"bar": 42}]', [true, {}]]
+            ,['{"foo": {"bar": 42}}', [true, {}]]
+            ,['[[{"bar": 42}]]', [false, {}]]
+            ,['{"bar": 42}', [false, {}]]
+            ,['[42]', [false, {}]]
+            ,['42', [false, {}]]
          ]
         ],
         ['<[*, 42, *]>',
          [
              ['[[42]]', [true, {}]]
-         ]
-        ],
-        ['{_:[*, 42, *]}',
-         [
-             ['{"bar": [42]}', [true, {}]]
+             ,['{"foo": [42]}', [true, {}]]
+             ,['[["foo", 42, false]]', [true, {}]]
+             ,['[42]', [false, {}]]
+             ,['[false, 42, true]', [false, {}]]
+             ,['{"foo": 42}', [false, {}]]
+             ,['["foo", 42, false]', [false, {}]]
          ]
         ],
         ['<{_:[*, 42, *]}>',
          [
              ['{"foo": {"bar": [42]}}', [true, {}]]
-         ]
-        ],
-        ['<{_:[*, 42, *]}>',
-         [
-             ['[{"bar": [42]}]', [true, {}]]
+             ,['[{"bar": [42]}]', [true, {}]]
          ]
         ],
         ['<42, false>',
@@ -340,42 +346,47 @@ var tests =
          ]
         ],
 
-        // descenadnt
+        // Descendant
         // 
-
-        ['**/42',
+        ['<!42!>',
          [
              ['[42]', [true, {}]],
              ['{"foo": 42}', [true, {}]],
              ['{"bar": {}, "foo": 42}', [true, {}]],
              ['["foo", 42]', [true, {}]],
              ['[[{"bar": [{"foo": ["bar", 42, 13]}]}]]', [true, {}]],
+             ['[[[[[[[[[[[[[42]]]]]]]]]]]]]', [true, {}]],
              ['42', [false, {}]],
              ['[]', [false, {}]],
              ['{}', [false, {}]]
          ]
         ],
-        ['**/[*, 42]',
+        ['<![*, 42]!>',
          [
              ['[]', [false, {}]],
              ['{}', [false, {}]],
              ['[42]', [false, {}]],
+             ['[[42]]', [true, {}]],
+             ['[[42, "foo"]]', [false, {}]],
+             ['[["foo", 42]]', [true, {}]],
              ['["foo", [42]]', [true, {}]],
              ['{"foo" : [42]}', [true, {}]],
              ['[[{"bar": [{"foo": ["this one matches", 42]}]}], "next does not match", 42]', [true, {}]]
 
          ]
         ],
-        ["**/{_:42}",
+        ["<!{_:42}!>",
          [
              ['[{"bar": 42}]', [true, {}]],
+             ['{"bar": 42}', [false, {}]],
+             ['[["bar", 42]]', [false, {}]],
              ['[{"bar": ["42", \
                          {"foo": true, \
                           "bar": ["A", "B", {"neh": 42}, false]}, \
                          true]}]', [true, {}]]
          ]
         ],
-        ['[*, "mark", **/**/42, "END"]',
+        ['[*, "mark", <!<!42!>!>, "END"]',
          [
              ['42', [false, {}]],
              ['[42]', [false, {}]],
@@ -389,7 +400,44 @@ var tests =
              ['[true, "mark", {"something": [{"true": 42}], "at the end": null}, "END"]', [true, {}]]
          ]
         ],
+        ['<! true, false !>',
+            [
+                ['[]', [false, {}]]
+                ,['[true]', [false, {}]]
+                ,['[false]', [false, {}]]
+                ,['[true, false]', [true, {}]]
+                ,['[false, true]', [true, {}]]
 
+                ,['[[[[[[true, false]]]]]]', [true, {}]]
+                ,['[[[[[[true]]]]], false]', [true, {}]]
+                ,['[[[[[[true]], false]]]]', [true, {}]]
+                ,['[[[[[["foo", false]], true, 42]]], "bar"]', [true, {}]]
+                ,['[false, [[[[["foo", true]], 42]]], "bar"]', [true, {}]]
+                ,['[[[[[["foo", false]], false, 42]]], "bar"]', [false, {}]]
+
+                ,['{}', [false, {}]]
+                ,['{"t":true}', [false, {}]]
+                ,['{"f": false}', [false, {}]]
+                ,['{"t":true, "f": false}', [true, {}]]
+                ,['{"f": false, "t":true}', [true, {}]]
+
+                ,['{"t": true, "f": {"f": false}}', [true, {}]]
+                ,['{"t": {"t": true, "f": {"f": false}}, "f": false}', [true, {}]]
+                ,['{"t": {"t": true, "f": {"f": true}}, "f": true}', [false, {}]]
+                ,['{"f": false, "t": {"t": {"t": {"t": true, "f": {"f": false}}}}}', [true, {}]],
+
+                ,['{"t": {"t": ["a", "b", {"t": [0, 1, {}, false]}], "f": {"f": true}}, "f": true}', [true, {}]]
+                ,['{"t": {"t": ["a", "b", {"t": [0, 1, {}, true]}], "f": {"f": true}}, "f": true}', [false, {}]]
+                ,['{"t": {"t": ["a", "b", {"t": [0, 1, {}, true]}], "f": {"f": true}}, "f": false}', [true, {}]]
+                ,['[1, 2, {"t": {"t": ["a", "b", {"t": [0, 1, {}, true]}]}}, {"f": {"f": true}}, {"f": [false]}]', [true, {}]]
+            ]
+        ],
+        ['<! true, [*, 42, false] !>',
+            [
+                ['[1, 2, {"t": {"t": ["a", "b", {"t": [0, 1, {}, [42, false, false]]}]}}, {"f": {"f": true}}, {"f": [false]}]', [false, {}]]
+                ,['[1, 2, {"t": {"t": ["a", "b", {"t": [0, 1, {}, [42, false, false]]}]}}, {"f": {"f": true}}, {"f": ["foo", 42, false]}]', [true, {}]]
+            ]
+        ],
         // Captures
         //
         ['(?<cap1>42)',
@@ -440,7 +488,7 @@ var tests =
              ['["un", 42, [], 43, {}]', [true, {c1: [42], c2: [43]}]]
          ]
         ],
-        ['[*, "mark", **/[(?<cap_iter>*/42), (?<cap_struct>{_:"foo"}), *], "END"]',
+        ['[*, "mark", <![(?<cap_iter><42>), (?<cap_struct>{_:"foo"}), *]!>, "END"]',
          [
              ['[true, "mark", ["something", [{"true": 42}, {"bar": "foo"}, "the world\'send"]], "END"]', [true, {"cap_iter": [{"true": 42}], "cap_struct": [{"bar":"foo"}]}]]
          ]
@@ -482,7 +530,7 @@ var tests =
              ['"HfoonehbarbarT"', [false, {}], {iv1: new RegExp("^foo.*bar$")}]
          ]
         ],
-        ['[*, "mark", **/[(?<cap_iter>*/(!<ivnum>number)), (?<cap_struct>{_:(!<ivstring>string)}), *], "END"]',
+        ['[*, "mark", <![(?<cap_iter><(!<ivnum>number)>), (?<cap_struct>{_:(!<ivstring>string)}), *]!>, "END"]',
          [
              ['[true, "mark", ["something", [{"true": 42}, {"bar": "foo"}, "the world\'send"]], "END"]',
               [true, {"cap_iter": [{"true": 42}], 
@@ -533,7 +581,7 @@ var tests =
         ],
         // check shorten form
         // 
-        ['*/(?<node>*/(?<val>_)/g)/g',
+        ['<(?<node><(?<val>_)>/g)>/g',
          [
              ['[1, 2, 3]', [false, {}], {}],
              ['[[1, 2, 3]]',
@@ -558,7 +606,7 @@ var tests =
         // 
         // check capturing behaviour
         //
-        ['**/(?<forty2>42)/g',
+        ['<!(?<forty2>42)!>/g',
          [
              ['[42, "foo"]', [true, {forty2: [42]}], {}] // capture 
              ,['["foo", 42]', [true, {forty2: [42]}], {}] // order does not matter
@@ -569,7 +617,7 @@ var tests =
                {}],
          ]
         ],
-        ['<**/(?<foo>#"foo")>/g',
+        ['<<!(?<foo>#"foo")!>/g>',
          [
              ['["foo"]', [false, {}], {}] // first level list cannot match
              ,['[["nehfoo"]]', [true, {foo: ["nehfoo"]}], {}] // nested list matches
@@ -580,7 +628,7 @@ var tests =
              
          ]
         ],
-        ['<(?<node>**/(?<foo>#"foo")/g)>/g',
+        ['<(?<node><!(?<foo>#"foo")!>/g)>/g',
          [
              ['[{"deep": [{"whatever": "nehfoo"}]}, \
                 {"a":"non-fOo", "fkey": "ifoo"}, \
@@ -590,6 +638,34 @@ var tests =
                                                    {fookey: 'foo'}]}],
               {}] // very nested object matches, and all matching items are captured
          ]
+        ],
+        ['<! (?<foo>#"^foo") !>/g',
+            [
+                ['"foo"', [false, {}]]
+                ,['["foo"]', [true, {foo: ['foo']}]]
+                ,['["foo1", "foo2"]', [true, {foo: ['foo1', 'foo2']}]]
+                ,['["foo2", "foo1"]', [true, {foo: ['foo2', 'foo1']}]]
+                ,['{"f": "foo1", "t": "foo2"}', [true, {foo: ['foo1', 'foo2']}]]
+                ,['{"f": "foo2", "t": "foo1"}', [true, {foo: ['foo2', 'foo1']}]]
+                ,['{"f": "foo2", "k": "pifoo", "t": "foo1"}', [true, {foo: ['foo2', 'foo1']}]]
+
+                ,['[true, {"t": ["pifoo", "foo1"]}, "foo2", ["foo3", {"f": {"f": ["foo4"]}}, true], "foo5"]', [true, {foo: ['foo1', 'foo2', 'foo3', 'foo4', 'foo5']}]]
+            ]
+        ],
+        ['<! (?<foo>#"^foo"), (?<bfoo>{_:[#"foo", *]}) !>/g',
+            [
+                ['["foo5", {"oui": ["foo6"]}, {"non": [42, "foo7"]}]',
+                 [true, {foo: ['foo5', 'foo6', 'foo7'],
+                         bfoo: [{oui: ['foo6']}]}]],
+                ['[true, {"t": ["pifoo", "foo1"]}, "foo2", ["foo3", {"f": {"f": ["foo4"]}}, true], "foo5"]',
+                 [true, {foo: ['foo1', 'foo2', 'foo3', 'foo4', 'foo5'],
+                         bfoo: [{t: ["pifoo", "foo1"]},
+                                {f: ["foo4"]}]}]],
+                ['[true, {"t": ["pifoo", "foo1"]}, "foo2", ["foo3", {"f": {"f": ["foo4"]}}, true], ["foo5", {"non": [42, "foo6"]}]]',
+                 [true, {foo: ['foo1', 'foo2', 'foo3', 'foo4', 'foo5', 'foo6'],
+                         bfoo: [{t: ["pifoo", "foo1"]},
+                                {f: ["foo4"]}]}]],
+            ]
         ]
     ];
 

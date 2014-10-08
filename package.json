@@ -12,7 +12,7 @@
     },
     "main": "./lib/jjpet.js",
     "scripts": {
-        "test": "node ./test.js"
+        "test": "node ./validation_test.js"
     },
     "dependencies": {
     },

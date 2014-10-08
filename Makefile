@@ -9,7 +9,7 @@ parser: spec.txt
 	./node_modules/pegjs/bin/pegjs $< ./lib/spec.js
 
 test:
-	node ./test.js
+	node ./validation_test.js
 
 browserify:
 	(cd ./lib && browserify  -r ./jjpet.js:jjpet > ../dist/jjpet-dist.js)

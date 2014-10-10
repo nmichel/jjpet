@@ -1,6 +1,6 @@
 {
     "name": "jjpet",
-    "version": "0.0.4",
+    "version": "0.1.0",
     "description": "Matching JSON nodes in javascript",
     "author": "Nicolas Michel <nicolas.michel.lava@gmail.com>",
     "repository": {

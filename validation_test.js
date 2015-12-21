@@ -35,7 +35,7 @@ function doTests(allTests) {
     }
 }
 
-https.get('https://gist.githubusercontent.com/nmichel/8b0d6f194e89abb7281d/raw/cbabb4fad5358540499ce5b399b04eecba6a210e/validation_tests.json',
+https.get('https://gist.githubusercontent.com/nmichel/8b0d6f194e89abb7281d/raw/907027e8d0be034433e1f56661a6a4fa3292daff/validation_tests.json',
     function(res) {
         var body = '';
         res.setEncoding('utf8');

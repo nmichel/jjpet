@@ -26,15 +26,21 @@ expr
         { return builders.build_matcher_list_any(); }
   / "[" spaces s:span spaces "]"
         {
-          s.push(builders.build_matcher_item(builders.build_matcher_eol()));
-          return builders.build_matcher_list(s);
+          return builders.build_matcher_list([builders.build_matcher_span(s, true)]);
         }
   / "[" spaces s:span spaces "," spaces "*" spaces "]"
-        {return builders.build_matcher_list(s)}
+        {
+          return builders.build_matcher_list([builders.build_matcher_span(s, false)]);
+        }
   / "[" spaces s:span spaces "," spaces t:tail
-        { return builders.build_matcher_list(s.concat(t)); }
+        {
+          var r = [builders.build_matcher_span(s, false)]
+          return builders.build_matcher_list(r.concat(t));
+        }
   / "[" spaces t:tail
-        { return builders.build_matcher_list(t); }
+        {
+          return builders.build_matcher_list(t);
+        }
   / "<" spaces ">"
         { return builders.build_matcher_iterable_any(); }
   / "<!" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "!>/g"
@@ -102,19 +108,18 @@ span
         }
 
 tail
-  = h:span_find t:(spaces "," spaces span_find)* spaces loose:("," spaces"*" spaces)? "]"
+  = h:span_find t:(spaces "," spaces span_find)* spaces loose:("," spaces "*" spaces)? "]"
         {
           var m = t.reduce(function(acc, item) {
             acc.push(item[3]);
             return acc;
           }, [h]);
 
-          if (loose == null) {
-            var eol = builders.build_matcher_item(builders.build_matcher_eol());
-            m[m.length-1].push(eol);
-          }
-          return m.reduce(function(acc, item) {
-            acc.push(builders.build_matcher_find_item(item));
+          return m.reduce(function(acc, item, idx, a) {
+            var last = (idx == a.length - 1),
+                strict = last && (loose == null)
+            var sm = builders.build_matcher_span(item, strict)
+            acc.push(builders.build_matcher_find_span(sm));
             return acc;
           }, []);
         }

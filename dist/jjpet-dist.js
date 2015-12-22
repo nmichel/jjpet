@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
     function build_matching_result(status, captures) {
         return {status: status,
@@ -169,75 +169,60 @@ module.exports = (function() {
         };
     };
 
-    function check_span_match(what, matchers, params) {
+    function check_span_match(what, matchers, params, strict) {
         var w = what,
-            acc = [];
+            acc = []
         for (var iter = 0; iter < matchers.length; ++iter) {
             var m = matchers[iter];
             if (w.length == 0) {
-                var res = m(w, params),
-                    stat = res[0];
-                if (! stat.status) {
-                    return [stat, w]; // <== 
-                }
-                acc.push(stat);
-                var finalAcc = acc.reduce(function(a, status) {
-                    return melt(a, status.captures);
-                }, {});
-                return [build_matching_result(true, finalAcc), w]; // <== 
+                return [build_matching_result(false, {}), w] // <== 
             }
-            else {
-                var res = m(w, params),
-                    stat = res[0];
-                w = w.slice(1);
-                if (! stat.status) {
-                    return [stat, w]; // <== 
-                }
-                acc.push(stat);
+
+            var res = m(w, params),
+                stat = res[0]
+            w = w.slice(1)
+            if (! stat.status) {
+                return [stat, w] // <== 
             }
+            acc.push(stat)
         }
+        
+        if (strict && w.length > 0) {
+            return [build_matching_result(false, {}), w] // <== 
+        }
+        
         var finalAcc = acc.reduce(function(a, status) {
-            return melt(a, status.captures);
+            return melt(a, status.captures)
         }, {});
-        return [build_matching_result(true, finalAcc), w]; // <== 
+        return [build_matching_result(true, finalAcc), w] // <== 
     }
 
-    function continue_until_match(what, matchers, params) {
-        var res = check_span_match(what, matchers, params),
-            stat = res[0];
-        if (stat.status || what.length == 0) {
-            // Either the span (possibly empty) matched
-            // or it didn't and it is empty
-            // In both case, we are finished and 'res' hold the result
-            // 
-            return res; // <== 
+    function continue_until_match(what, spanMatcher, params) {
+        if (what.length == 0) {
+            return [build_matching_result(false, {}), what] // <== 
+        }
+        
+        var res = spanMatcher(what, params),
+            stat = res[0]
+        if (stat.status) {
+            return res // <== 
         }
         else {
-            return continue_until_match(what.slice(1), matchers, params); // <== 
+            return continue_until_match(what.slice(1), spanMatcher, params) // <== 
         }
-    };
+    }
 
-    function build_matcher_find_item(matchers) {
+    function build_matcher_find_span(spanMatcher) {
         return function(what, params) {
-            if (isArray(what)) {
-                return continue_until_match(what, matchers, params); // <== 
-            }
-            else {
-                return [build_matching_result(false, {}), []]; // <== 
-            }
+            return continue_until_match(what, spanMatcher, params); // <== 
         };
     };
 
     function build_matcher_item(matcher) {
         return function(what, params) {
-            if (isArray(what)) {
-                if (what.length == 0) {
-                    return [matcher(what, params), []]; // <== 
-                }
-                else {
-                    var head = what[0];
-                    return [matcher(head, params), what.slice(1)]; // <== 
-                }
+            if (isArray(what) && what.length > 0) {
+                var head = what[0];
+                return [matcher(head, params), what.slice(1)]; // <== 
             }
             else {
                 return [build_matching_result(false, {}), []]; // <== 
@@ -245,15 +230,15 @@ module.exports = (function() {
         };
     };
 
-    function build_matcher_eol() {
-        return function(what) {
-            return build_matching_result(isArray(what) && what.length == 0, {}); // <== 
+    function build_matcher_span(itemMatchers, strict) {
+        return function(what, params) {
+            return check_span_match(what, itemMatchers, params, strict); // <== 
         }
     };
 
     function build_matcher_list(itemMatchers) {
         return function(what, params) {
-            if (!isArray(what)) {
+            if (!isArray(what) || (what.length == 0)) {
                 return build_matching_result(false, {}); // <== 
             }
 
@@ -538,9 +523,9 @@ module.exports = (function() {
         build_matcher_object:       build_matcher_object,
         build_matcher_list_empty:   build_matcher_list_empty,
         build_matcher_list_any:     build_matcher_list_any,
-        build_matcher_find_item:    build_matcher_find_item,
+        build_matcher_find_span:    build_matcher_find_span,
         build_matcher_item:         build_matcher_item,
-        build_matcher_eol:          build_matcher_eol,
+        build_matcher_span:         build_matcher_span,
         build_matcher_list:         build_matcher_list,
         build_matcher_iterable_any: build_matcher_iterable_any,
         build_matcher_iterable:     build_matcher_iterable,
@@ -550,25 +535,7 @@ module.exports = (function() {
     };
 })();
 
-},{}],"yQ6E8h":[function(require,module,exports){
-module.exports = (function() {
-    var builders = require('./builders.js');
-    var parser = require('./spec.js');
-    return {
-        compile: function(pattern) {
-            var matcher = parser.parse(pattern);
-            return matcher; // <== 
-        },
-        
-        run: function(json, matcher, params) {
-            return matcher(json, params || {}); // <== 
-        }
-    }
-})();
-
-},{"./builders.js":1,"./spec.js":4}],"jjpet":[function(require,module,exports){
-module.exports=require('yQ6E8h');
-},{}],4:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -639,12 +606,18 @@ module.exports = (function() {
         peg$c28 = { type: "literal", value: "*", description: "\"*\"" },
         peg$c29 = function() { return builders.build_matcher_list_any(); },
         peg$c30 = function(s) {
-                  s.push(builders.build_matcher_item(builders.build_matcher_eol()));
-                  return builders.build_matcher_list(s);
+                  return builders.build_matcher_list([builders.build_matcher_span(s, true)]);
                 },
-        peg$c31 = function(s) {return builders.build_matcher_list(s)},
-        peg$c32 = function(s, t) { return builders.build_matcher_list(s.concat(t)); },
-        peg$c33 = function(t) { return builders.build_matcher_list(t); },
+        peg$c31 = function(s) {
+                  return builders.build_matcher_list([builders.build_matcher_span(s, false)]);
+                },
+        peg$c32 = function(s, t) {
+                  var r = [builders.build_matcher_span(s, false)]
+                  return builders.build_matcher_list(r.concat(t));
+                },
+        peg$c33 = function(t) {
+                  return builders.build_matcher_list(t);
+                },
         peg$c34 = "<",
         peg$c35 = { type: "literal", value: "<", description: "\"<\"" },
         peg$c36 = function() { return builders.build_matcher_iterable_any(); },
@@ -718,12 +691,11 @@ module.exports = (function() {
                     return acc;
                   }, [h]);
 
-                  if (loose == null) {
-                    var eol = builders.build_matcher_item(builders.build_matcher_eol());
-                    m[m.length-1].push(eol);
-                  }
-                  return m.reduce(function(acc, item) {
-                    acc.push(builders.build_matcher_find_item(item));
+                  return m.reduce(function(acc, item, idx, a) {
+                    var last = (idx == a.length - 1),
+                        strict = last && (loose == null)
+                    var sm = builders.build_matcher_span(item, strict)
+                    acc.push(builders.build_matcher_find_span(sm));
                     return acc;
                   }, []);
                 },
@@ -3456,4 +3428,20 @@ module.exports = (function() {
   };
 })();
 
-},{"./builders.js":1}]},{},[])
+},{"./builders.js":1}],"jjpet":[function(require,module,exports){
+module.exports = (function() {
+    var builders = require('./builders.js');
+    var parser = require('./spec.js');
+    return {
+        compile: function(pattern) {
+            var matcher = parser.parse(pattern);
+            return matcher; // <== 
+        },
+        
+        run: function(json, matcher, params) {
+            return matcher(json, params || {}); // <== 
+        }
+    }
+})();
+
+},{"./builders.js":1,"./spec.js":2}]},{},[]);

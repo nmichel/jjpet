@@ -2,7 +2,7 @@
 
 ### Bug fix(es)
 
-* Empty list [] used to match pattern "[_]". Shouldn't.
+* Empty list ```[]``` used to match pattern ```[_]```. Shouldn't.
 
 # 0.1.0
 

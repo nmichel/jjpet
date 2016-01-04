@@ -1,6 +1,6 @@
 {
     "name": "jjpet",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Matching JSON nodes in javascript",
     "author": "Nicolas Michel <nicolas.michel.lava@gmail.com>",
     "repository": {
@@ -18,5 +18,6 @@
     },
     "devDependencies": {
         "pegjs": "0.8.x"
-    }
+    },
+    "tonicExampleFilename": "tonicExample.js"
 }

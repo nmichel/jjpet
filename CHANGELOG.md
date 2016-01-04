@@ -1,4 +1,7 @@
-# master
+# 0.2.1
+
+### New feature(s)
+* Add ```tonicExample.js``` file for ```npm/Tonic``` integration.
 
 # 0.2.0
 

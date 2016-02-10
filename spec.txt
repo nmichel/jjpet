@@ -1,133 +1,133 @@
 {
-    var builders = require('./builders.js');
+    var builders = require('./ast.js')
 }
 
 pattern
   = spaces "(" spaces "?<" spaces name:name spaces ">" spaces matcher:expr spaces ")" spaces
-        { return builders.build_matcher_capture(name, matcher); }
+        { return builders.build_matcher_capture(name, matcher) }
   / spaces expr:expr spaces
-        { return expr; }
+        { return expr }
 
 name = $([a-zA-Z_0-9]+)
 
 expr
   = "{" spaces "}"
-        { return builders.build_matcher_object_any(); }
+        { return builders.build_matcher_object_any() }
   / "{" spaces head:pair spaces tail:(',' spaces pair)* spaces "}"
         {
             var pairMatchers = tail.reduce(function(acc, item) {
-                return acc.concat(item[2]);
-            }, [head]);
-            return builders.build_matcher_object(pairMatchers);
+                return acc.concat(item[2])
+            }, [head])
+            return builders.build_matcher_object(pairMatchers)
         }
   / "[" spaces "]"
-        { return builders.build_matcher_list_empty(); }
+        { return builders.build_matcher_list_empty() }
   / "[" spaces "*" spaces "]"
-        { return builders.build_matcher_list_any(); }
+        { return builders.build_matcher_list_any() }
   / "[" spaces s:span spaces "]"
         {
-          return builders.build_matcher_list([builders.build_matcher_span(s, true)]);
+          return builders.build_matcher_list([builders.build_matcher_span(s, true)])
         }
   / "[" spaces s:span spaces "," spaces "*" spaces "]"
         {
-          return builders.build_matcher_list([builders.build_matcher_span(s, false)]);
+          return builders.build_matcher_list([builders.build_matcher_span(s, false)])
         }
   / "[" spaces s:span spaces "," spaces t:tail
         {
           var r = [builders.build_matcher_span(s, false)]
-          return builders.build_matcher_list(r.concat(t));
+          return builders.build_matcher_list(r.concat(t))
         }
   / "[" spaces t:tail
         {
-          return builders.build_matcher_list(t);
+          return builders.build_matcher_list(t)
         }
   / "<" spaces ">"
-        { return builders.build_matcher_iterable_any(); }
+        { return builders.build_matcher_iterable_any() }
   / "<!" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "!>/g"
         {
             var matchers = tail.reduce(function(acc, item) {
-                return acc.concat(item[2]);
-            }, [head]);
-            return builders.build_matcher_descendant(matchers, true);
+                return acc.concat(item[2])
+            }, [head])
+            return builders.build_matcher_descendant(matchers, true)
         }
   / "<!" spaces head:pattern spaces tail:(',' spaces pattern)* spaces "!>"
         {
             var matchers = tail.reduce(function(acc, item) {
-                return acc.concat(item[2]);
-            }, [head]);
-            return builders.build_matcher_descendant(matchers, false);
+                return acc.concat(item[2])
+            }, [head])
+            return builders.build_matcher_descendant(matchers, false)
         }
   / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">/g"
         {
             var matchers = tail.reduce(function(acc, item) {
-                return acc.concat(item[2]);
-            }, [head]);
-            return builders.build_matcher_iterable(matchers, true);
+                return acc.concat(item[2])
+            }, [head])
+            return builders.build_matcher_iterable(matchers, true)
         }
   / "<" spaces head:pattern spaces tail:(',' spaces pattern)* spaces ">"
         {
             var matchers = tail.reduce(function(acc, item) {
-                return acc.concat(item[2]);
-            }, [head]);
-            return builders.build_matcher_iterable(matchers, false);
+                return acc.concat(item[2])
+            }, [head])
+            return builders.build_matcher_iterable(matchers, false)
         }
   / "_"
-        { return builders.build_matcher_any(); }
+        { return builders.build_matcher_any() }
   / "true"
-        { return builders.build_matcher_boolean(true); }
+        { return builders.build_matcher_boolean(true) }
   / "false"
-        { return builders.build_matcher_boolean(false); }
+        { return builders.build_matcher_boolean(false) }
   / "null"
-        { return builders.build_matcher_null(); }
+        { return builders.build_matcher_null() }
   / number:number
-        { return builders.build_matcher_number(parseFloat(number)); }
+        { return builders.build_matcher_number(parseFloat(number)) }
   / string:string
-        { return builders.build_matcher_string(string); }
+        { return builders.build_matcher_string(string) }
   / regex:regex
-        { return builders.build_matcher_regex(regex); }
+        { return builders.build_matcher_regex(regex) }
   / "(" spaces "!<" spaces name:name spaces ">" spaces typename:type spaces ")"
-        { return builders.build_matcher_inject(name, typename); }
+        { return builders.build_matcher_inject(name, typename) }
 
 pair
   = key:string spaces ":" spaces valueMatcher:pattern
-        { var keyMatcher = builders.build_matcher_string(key);
-          return builders.build_matcher_pair(keyMatcher, valueMatcher); }
+        { var keyMatcher = builders.build_matcher_string(key)
+          return builders.build_matcher_pair(keyMatcher, valueMatcher) }
   / key:string spaces ":" spaces '_'
-        { var keyMatcher = builders.build_matcher_string(key);
-          return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()); }
+        { var keyMatcher = builders.build_matcher_string(key)
+          return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()) }
   / "_" spaces ":" spaces valueMatcher:pattern
-        { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher); }
+        { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher) }
 
 span
   = h:pattern t:(spaces "," spaces pattern)*
         {
           return t.reduce(function(acc, item) {
-            acc.push(builders.build_matcher_item(item[3]));
-            return acc;
-          }, [builders.build_matcher_item(h)]);
+            acc.push(builders.build_matcher_item(item[3]))
+            return acc
+          }, [builders.build_matcher_item(h)])
         }
 
 tail
   = h:span_find t:(spaces "," spaces span_find)* spaces loose:("," spaces "*" spaces)? "]"
         {
           var m = t.reduce(function(acc, item) {
-            acc.push(item[3]);
-            return acc;
-          }, [h]);
+            acc.push(item[3])
+            return acc
+          }, [h])
 
           return m.reduce(function(acc, item, idx, a) {
             var last = (idx == a.length - 1),
                 strict = last && (loose == null)
             var sm = builders.build_matcher_span(item, strict)
-            acc.push(builders.build_matcher_find_span(sm));
-            return acc;
-          }, []);
+            acc.push(builders.build_matcher_find_span(sm))
+            return acc
+          }, [])
         }
 
 span_find
   = "*" spaces "," spaces s:span
         {
-          return s;
+          return s
         }
 
 number
@@ -162,11 +162,11 @@ e
 
 string
   = "\"" chars:chars "\""
-        { return chars; }
+        { return chars }
   
 regex
   = "#" spaces string:string
-        { return string; }
+        { return string }
 
 type
   = "string"
@@ -176,27 +176,27 @@ type
 
 chars
   = chars:char*
-        { return chars.join(""); }
+        { return chars.join("") }
 char
   = codepoint
   / "\\n"
-        { return '\n'; }
+        { return '\n' }
   / "\\r"
-        { return '\r'; }
+        { return '\r' }
   / "\\t"
-        { return '\t'; }
+        { return '\t' }
   / "\\b"
-        { return '\b'; }
+        { return '\b' }
   / "\\f"
-        { return '\f'; }
+        { return '\f' }
   / "\\s"
-        { return '\s'; }
+        { return '\s' }
   / "\\\\"
-        { return '\\'; }
+        { return '\\' }
   / "\\\""
-        { return '\"'; }
+        { return '\"' }
   / !("\"" / "\\") char:anychar
-        { return char; }
+        { return char }
   
 anychar
   = .

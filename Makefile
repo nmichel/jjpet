@@ -12,4 +12,4 @@ test:
 	node ./validation_test.js
 
 browserify:
-	(cd ./lib && browserify  -r ./jjpet.js:jjpet > ../dist/jjpet-dist.js)
+	(cd ./lib && browserify -r ./jjpet.js:jjpet -r ./ast.js:ast -r ./generator.js:generator > ../dist/jjpet-dist.js)

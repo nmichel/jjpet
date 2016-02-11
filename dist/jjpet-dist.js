@@ -1,206 +1,5 @@
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
-    var code = 1,
-        NODE_KIND = {
-            NUMBER:         code++,
-            STRING:         code++,
-            REGEX:          code++,
-            BOOLEAN:        code++,
-            NULL:           code++,
-            ANY:            code++,
-            OBJECT_ANY:     code++,
-            PAIR:           code++,
-            OBJECT:         code++,
-            LIST_EMPTY:     code++,
-            LIST_ANY:       code++,
-            FIND_SPAN:      code++,
-            ITEM:           code++,
-            SPAN:           code++,
-            LIST:           code++,
-            ITERABLE_ANY:   code++,
-            ITERABLE:       code++,
-            DESCENDANT:     code++,
-            CAPTURE:        code++,
-            INJECT:         code++
-        },
-        NODE_STR = {}
-        
-    for (var k in NODE_KIND) {
-        NODE_STR[NODE_KIND[k]] = k
-    }
-
-    function node_kind_to_string(c) {
-        return NODE_STR[c] || "?"
-    }
-    
-    function build_matcher_number(value) {
-        return {
-            type: NODE_KIND.NUMBER,
-            value: value
-        }
-    }    
-
-    function build_matcher_string(value) {
-        return {
-            type: NODE_KIND.STRING,
-            value: value
-        }
-    }
-    
-    function build_matcher_regex(value) {
-        return {
-            type: NODE_KIND.REGEX,
-            value: value
-        }
-    }
-    
-    function build_matcher_boolean(value) {
-        return {
-            type: NODE_KIND.BOOLEAN,
-            value: value
-        }
-    }
-
-    function build_matcher_null() {
-        return {
-            type: NODE_KIND.NULL
-        }        
-    }
-
-    function build_matcher_any() {
-        return {
-            type: NODE_KIND.ANY
-        }
-    }
-
-    function build_matcher_object_any() {
-        return {
-            type: NODE_KIND.OBJECT_ANY
-        }
-    }
-    
-    function build_matcher_pair(key, value) {
-        return {
-            type: NODE_KIND.PAIR,
-            key: key,
-            value: value
-        }
-    }
-
-    function build_matcher_object(pairs) {
-        return {
-            type: NODE_KIND.OBJECT,
-            pairs: pairs
-        }
-    }
-    
-    function build_matcher_list_empty() {
-        return {
-            type: NODE_KIND.LIST_EMPTY
-        }
-    }
-    
-    function build_matcher_list_any() {
-        return {
-            type: NODE_KIND.LIST_ANY
-        }
-    }
-    
-    function build_matcher_find_span(expr) {
-        return {
-            type: NODE_KIND.FIND_SPAN,
-            expr: expr
-        }
-    }
-    
-    function build_matcher_item(expr) {
-        return {
-            type: NODE_KIND.ITEM,
-            expr: expr
-        }
-    }
-    
-    function build_matcher_span(items, strict) {
-        return {
-            type: NODE_KIND.SPAN,
-            items: items,
-            strict: strict
-        }
-    }
-    
-    function build_matcher_list(segments) {
-        return {
-            type: NODE_KIND.LIST,
-            segments: segments
-        }        
-    }
-    
-    function build_matcher_iterable_any() {
-        return {
-            type: NODE_KIND.ITERABLE_ANY
-        }
-    }
-
-    function build_matcher_iterable(exprs, strict) {
-        return {
-            type: NODE_KIND.ITERABLE,
-            items: exprs,
-            strict: strict
-        }
-    }
-    
-    function build_matcher_descendant(exprs, strict) {
-        return {
-            type: NODE_KIND.DESCENDANT,
-            items: exprs,
-            strict: strict
-        }
-    }
-
-    function build_matcher_capture(name, expr) {
-        return {
-            type: NODE_KIND.CAPTURE,
-            name: name,
-            expr: expr
-        }
-    }
-    
-    function build_matcher_inject(name, typename) {
-        return {
-            type: NODE_KIND.INJECT,
-            name: name,
-            typename: typename
-        }
-    }
-    
-    return {
-        NODE_KIND:                  NODE_KIND,
-        node_kind_to_string:        node_kind_to_string,
-        build_matcher_number:       build_matcher_number,
-        build_matcher_string:       build_matcher_string,
-        build_matcher_regex:        build_matcher_regex,
-        build_matcher_boolean:      build_matcher_boolean,
-        build_matcher_null:         build_matcher_null,
-        build_matcher_any:          build_matcher_any,
-        build_matcher_object_any:   build_matcher_object_any,
-        build_matcher_pair:         build_matcher_pair,
-        build_matcher_object:       build_matcher_object,
-        build_matcher_list_empty:   build_matcher_list_empty,
-        build_matcher_list_any:     build_matcher_list_any,
-        build_matcher_find_span:    build_matcher_find_span,
-        build_matcher_item:         build_matcher_item,
-        build_matcher_span:         build_matcher_span,
-        build_matcher_list:         build_matcher_list,
-        build_matcher_iterable_any: build_matcher_iterable_any,
-        build_matcher_iterable:     build_matcher_iterable,
-        build_matcher_descendant:   build_matcher_descendant,
-        build_matcher_capture:      build_matcher_capture,
-        build_matcher_inject:       build_matcher_inject
-    }
-})()
-
-},{}],2:[function(require,module,exports){
-module.exports = (function() {
     function build_matching_result(status, captures) {
         return {status: status,
                 captures: captures};
@@ -736,143 +535,7 @@ module.exports = (function() {
     };
 })();
 
-},{}],3:[function(require,module,exports){
-module.exports = (function() {
-    var ast = require('./ast.js'),
-        builders = require('./builders.js'),
-        generators = {}
-
-    function generate(ast) {
-        return (generators[ast.type] || generate_boom)(ast)
-    }
-
-    function generate_number(ast) {
-        return builders.build_matcher_number(ast.value)
-    }
-    
-    function generate_string(ast) {
-        return builders.build_matcher_string(ast.value)
-    }
-    
-    function generate_regex(ast) {
-        return builders.build_matcher_regex(ast.value)
-    }
-    
-    function generate_boolean(ast) {
-        return builders.build_matcher_boolean(ast.value)
-    }
-    
-    function generate_null(ast) {
-        return builders.build_matcher_null()
-    }
-    
-    function generate_any(ast) {
-        return builders.build_matcher_any()
-    }
-    
-    function generate_object_any(ast) {
-        return builders.build_matcher_object_any()
-    }
-    
-    function generate_pair(ast) {
-        return builders.build_matcher_pair(generate(ast.key), generate(ast.value))
-    }
-    
-    function generate_object(ast) {
-        var pms = ast.pairs.map(function(p) {
-            return generate(p)
-        })
-        return builders.build_matcher_object(pms)
-    }
-    
-    function generate_list_empty(ast) {
-        return builders.build_matcher_list_empty()
-    }
-    
-    function generate_list_any(ast) {
-        return builders.build_matcher_list_any()
-    }
-    
-    function generate_find_span(ast) {
-        return builders.build_matcher_find_span(generate(ast.expr))
-    }
-    
-    function generate_item(ast) {
-        return builders.build_matcher_item(generate(ast.expr))
-    }
-    
-    function generate_span(ast) {
-        var ims = ast.items.map(function(p) {
-            return generate(p)
-        })
-        return builders.build_matcher_span(ims, ast.strict)
-    }
-    
-    function generate_list(ast) {
-        var sms = ast.segments.map(function(p) {
-            return generate(p)
-        })
-        return builders.build_matcher_list(sms)
-    }
-    
-    function generate_iterable_any(ast) {
-        return builders.build_matcher_iterable_any()
-    }
-    
-    function generate_iterable(ast) {
-        var ims = ast.items.map(function(p) {
-            return generate(p)
-        })
-        return builders.build_matcher_iterable(ims, ast.strict)
-    }
-    
-    function generate_descendant(ast) {
-        var ims = ast.items.map(function(p) {
-            return generate(p)
-        })
-        return builders.build_matcher_descendant(ims, ast.strict)
-    }
-    
-    function generate_capture(ast) {
-        return builders.build_matcher_capture(ast.name, generate(ast.expr))
-    }
-    
-    function generate_inject(ast) {
-        return builders.build_matcher_inject(ast.name, ast.typename)
-    }
-
-    generators[ast.NODE_KIND.NUMBER] =          generate_number
-    generators[ast.NODE_KIND.STRING] =          generate_string
-    generators[ast.NODE_KIND.REGEX] =           generate_regex
-    generators[ast.NODE_KIND.BOOLEAN] =         generate_boolean
-    generators[ast.NODE_KIND.NULL] =            generate_null
-    generators[ast.NODE_KIND.ANY] =             generate_any
-    generators[ast.NODE_KIND.OBJECT_ANY] =      generate_object_any
-    generators[ast.NODE_KIND.PAIR] =            generate_pair
-    generators[ast.NODE_KIND.OBJECT] =          generate_object
-    generators[ast.NODE_KIND.LIST_EMPTY] =      generate_list_empty
-    generators[ast.NODE_KIND.LIST_ANY] =        generate_list_any
-    generators[ast.NODE_KIND.FIND_SPAN] =       generate_find_span
-    generators[ast.NODE_KIND.ITEM] =            generate_item
-    generators[ast.NODE_KIND.SPAN] =            generate_span
-    generators[ast.NODE_KIND.LIST] =            generate_list
-    generators[ast.NODE_KIND.ITERABLE_ANY] =    generate_iterable_any
-    generators[ast.NODE_KIND.ITERABLE] =        generate_iterable
-    generators[ast.NODE_KIND.DESCENDANT] =      generate_descendant
-    generators[ast.NODE_KIND.CAPTURE] =         generate_capture
-    generators[ast.NODE_KIND.INJECT] =          generate_inject
-
-    function generate_boom(ast) {
-        throw "no generator for node of type " + ast.type // <== 
-    }
-
-    return  {
-        generate: generate
-    }
-})()
-
-
-},{"./ast.js":1,"./builders.js":2}],4:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -3765,7 +3428,344 @@ module.exports = (function() {
   };
 })();
 
-},{"./ast.js":1}],"jjpet":[function(require,module,exports){
+},{"./ast.js":"ast"}],"ast":[function(require,module,exports){
+module.exports = (function() {
+    var code = 1,
+        NODE_KIND = {
+            NUMBER:         code++,
+            STRING:         code++,
+            REGEX:          code++,
+            BOOLEAN:        code++,
+            NULL:           code++,
+            ANY:            code++,
+            OBJECT_ANY:     code++,
+            PAIR:           code++,
+            OBJECT:         code++,
+            LIST_EMPTY:     code++,
+            LIST_ANY:       code++,
+            FIND_SPAN:      code++,
+            ITEM:           code++,
+            SPAN:           code++,
+            LIST:           code++,
+            ITERABLE_ANY:   code++,
+            ITERABLE:       code++,
+            DESCENDANT:     code++,
+            CAPTURE:        code++,
+            INJECT:         code++
+        },
+        NODE_STR = {}
+        
+    for (var k in NODE_KIND) {
+        NODE_STR[NODE_KIND[k]] = k
+    }
+
+    function node_kind_to_string(c) {
+        return NODE_STR[c] || "?"
+    }
+    
+    function build_matcher_number(value) {
+        return {
+            type: NODE_KIND.NUMBER,
+            value: value
+        }
+    }    
+
+    function build_matcher_string(value) {
+        return {
+            type: NODE_KIND.STRING,
+            value: value
+        }
+    }
+    
+    function build_matcher_regex(value) {
+        return {
+            type: NODE_KIND.REGEX,
+            value: value
+        }
+    }
+    
+    function build_matcher_boolean(value) {
+        return {
+            type: NODE_KIND.BOOLEAN,
+            value: value
+        }
+    }
+
+    function build_matcher_null() {
+        return {
+            type: NODE_KIND.NULL
+        }        
+    }
+
+    function build_matcher_any() {
+        return {
+            type: NODE_KIND.ANY
+        }
+    }
+
+    function build_matcher_object_any() {
+        return {
+            type: NODE_KIND.OBJECT_ANY
+        }
+    }
+    
+    function build_matcher_pair(key, value) {
+        return {
+            type: NODE_KIND.PAIR,
+            key: key,
+            value: value
+        }
+    }
+
+    function build_matcher_object(pairs) {
+        return {
+            type: NODE_KIND.OBJECT,
+            pairs: pairs
+        }
+    }
+    
+    function build_matcher_list_empty() {
+        return {
+            type: NODE_KIND.LIST_EMPTY
+        }
+    }
+    
+    function build_matcher_list_any() {
+        return {
+            type: NODE_KIND.LIST_ANY
+        }
+    }
+    
+    function build_matcher_find_span(expr) {
+        return {
+            type: NODE_KIND.FIND_SPAN,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_item(expr) {
+        return {
+            type: NODE_KIND.ITEM,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_span(items, strict) {
+        return {
+            type: NODE_KIND.SPAN,
+            items: items,
+            strict: strict
+        }
+    }
+    
+    function build_matcher_list(segments) {
+        return {
+            type: NODE_KIND.LIST,
+            segments: segments
+        }        
+    }
+    
+    function build_matcher_iterable_any() {
+        return {
+            type: NODE_KIND.ITERABLE_ANY
+        }
+    }
+
+    function build_matcher_iterable(exprs, strict) {
+        return {
+            type: NODE_KIND.ITERABLE,
+            items: exprs,
+            strict: strict
+        }
+    }
+    
+    function build_matcher_descendant(exprs, strict) {
+        return {
+            type: NODE_KIND.DESCENDANT,
+            items: exprs,
+            strict: strict
+        }
+    }
+
+    function build_matcher_capture(name, expr) {
+        return {
+            type: NODE_KIND.CAPTURE,
+            name: name,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_inject(name, typename) {
+        return {
+            type: NODE_KIND.INJECT,
+            name: name,
+            typename: typename
+        }
+    }
+    
+    return {
+        NODE_KIND:                  NODE_KIND,
+        node_kind_to_string:        node_kind_to_string,
+        build_matcher_number:       build_matcher_number,
+        build_matcher_string:       build_matcher_string,
+        build_matcher_regex:        build_matcher_regex,
+        build_matcher_boolean:      build_matcher_boolean,
+        build_matcher_null:         build_matcher_null,
+        build_matcher_any:          build_matcher_any,
+        build_matcher_object_any:   build_matcher_object_any,
+        build_matcher_pair:         build_matcher_pair,
+        build_matcher_object:       build_matcher_object,
+        build_matcher_list_empty:   build_matcher_list_empty,
+        build_matcher_list_any:     build_matcher_list_any,
+        build_matcher_find_span:    build_matcher_find_span,
+        build_matcher_item:         build_matcher_item,
+        build_matcher_span:         build_matcher_span,
+        build_matcher_list:         build_matcher_list,
+        build_matcher_iterable_any: build_matcher_iterable_any,
+        build_matcher_iterable:     build_matcher_iterable,
+        build_matcher_descendant:   build_matcher_descendant,
+        build_matcher_capture:      build_matcher_capture,
+        build_matcher_inject:       build_matcher_inject
+    }
+})()
+
+},{}],"generator":[function(require,module,exports){
+module.exports = (function() {
+    var ast = require('./ast.js'),
+        builders = require('./builders.js'),
+        generators = {}
+
+    function generate(ast) {
+        return (generators[ast.type] || generate_boom)(ast)
+    }
+
+    function generate_number(ast) {
+        return builders.build_matcher_number(ast.value)
+    }
+    
+    function generate_string(ast) {
+        return builders.build_matcher_string(ast.value)
+    }
+    
+    function generate_regex(ast) {
+        return builders.build_matcher_regex(ast.value)
+    }
+    
+    function generate_boolean(ast) {
+        return builders.build_matcher_boolean(ast.value)
+    }
+    
+    function generate_null(ast) {
+        return builders.build_matcher_null()
+    }
+    
+    function generate_any(ast) {
+        return builders.build_matcher_any()
+    }
+    
+    function generate_object_any(ast) {
+        return builders.build_matcher_object_any()
+    }
+    
+    function generate_pair(ast) {
+        return builders.build_matcher_pair(generate(ast.key), generate(ast.value))
+    }
+    
+    function generate_object(ast) {
+        var pms = ast.pairs.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_object(pms)
+    }
+    
+    function generate_list_empty(ast) {
+        return builders.build_matcher_list_empty()
+    }
+    
+    function generate_list_any(ast) {
+        return builders.build_matcher_list_any()
+    }
+    
+    function generate_find_span(ast) {
+        return builders.build_matcher_find_span(generate(ast.expr))
+    }
+    
+    function generate_item(ast) {
+        return builders.build_matcher_item(generate(ast.expr))
+    }
+    
+    function generate_span(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_span(ims, ast.strict)
+    }
+    
+    function generate_list(ast) {
+        var sms = ast.segments.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_list(sms)
+    }
+    
+    function generate_iterable_any(ast) {
+        return builders.build_matcher_iterable_any()
+    }
+    
+    function generate_iterable(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_iterable(ims, ast.strict)
+    }
+    
+    function generate_descendant(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_descendant(ims, ast.strict)
+    }
+    
+    function generate_capture(ast) {
+        return builders.build_matcher_capture(ast.name, generate(ast.expr))
+    }
+    
+    function generate_inject(ast) {
+        return builders.build_matcher_inject(ast.name, ast.typename)
+    }
+
+    generators[ast.NODE_KIND.NUMBER] =          generate_number
+    generators[ast.NODE_KIND.STRING] =          generate_string
+    generators[ast.NODE_KIND.REGEX] =           generate_regex
+    generators[ast.NODE_KIND.BOOLEAN] =         generate_boolean
+    generators[ast.NODE_KIND.NULL] =            generate_null
+    generators[ast.NODE_KIND.ANY] =             generate_any
+    generators[ast.NODE_KIND.OBJECT_ANY] =      generate_object_any
+    generators[ast.NODE_KIND.PAIR] =            generate_pair
+    generators[ast.NODE_KIND.OBJECT] =          generate_object
+    generators[ast.NODE_KIND.LIST_EMPTY] =      generate_list_empty
+    generators[ast.NODE_KIND.LIST_ANY] =        generate_list_any
+    generators[ast.NODE_KIND.FIND_SPAN] =       generate_find_span
+    generators[ast.NODE_KIND.ITEM] =            generate_item
+    generators[ast.NODE_KIND.SPAN] =            generate_span
+    generators[ast.NODE_KIND.LIST] =            generate_list
+    generators[ast.NODE_KIND.ITERABLE_ANY] =    generate_iterable_any
+    generators[ast.NODE_KIND.ITERABLE] =        generate_iterable
+    generators[ast.NODE_KIND.DESCENDANT] =      generate_descendant
+    generators[ast.NODE_KIND.CAPTURE] =         generate_capture
+    generators[ast.NODE_KIND.INJECT] =          generate_inject
+
+    function generate_boom(ast) {
+        throw "no generator for node of type " + ast.type // <== 
+    }
+
+    return  {
+        generate: generate
+    }
+})()
+
+
+},{"./ast.js":"ast","./builders.js":1}],"jjpet":[function(require,module,exports){
 module.exports = (function() {
     var parser = require('./spec.js'),
         generator = require('./generator.js')
@@ -3789,4 +3789,4 @@ module.exports = (function() {
     }
 })()
 
-},{"./generator.js":3,"./spec.js":4}]},{},[]);
+},{"./generator.js":"generator","./spec.js":2}]},{},[]);

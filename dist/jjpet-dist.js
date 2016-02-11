@@ -1,5 +1,206 @@
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = (function() {
+    var code = 1,
+        NODE_KIND = {
+            NUMBER:         code++,
+            STRING:         code++,
+            REGEX:          code++,
+            BOOLEAN:        code++,
+            NULL:           code++,
+            ANY:            code++,
+            OBJECT_ANY:     code++,
+            PAIR:           code++,
+            OBJECT:         code++,
+            LIST_EMPTY:     code++,
+            LIST_ANY:       code++,
+            FIND_SPAN:      code++,
+            ITEM:           code++,
+            SPAN:           code++,
+            LIST:           code++,
+            ITERABLE_ANY:   code++,
+            ITERABLE:       code++,
+            DESCENDANT:     code++,
+            CAPTURE:        code++,
+            INJECT:         code++
+        },
+        NODE_STR = {}
+        
+    for (var k in NODE_KIND) {
+        NODE_STR[NODE_KIND[k]] = k
+    }
+
+    function node_kind_to_string(c) {
+        return NODE_STR[c] || "?"
+    }
+    
+    function build_matcher_number(value) {
+        return {
+            type: NODE_KIND.NUMBER,
+            value: value
+        }
+    }    
+
+    function build_matcher_string(value) {
+        return {
+            type: NODE_KIND.STRING,
+            value: value
+        }
+    }
+    
+    function build_matcher_regex(value) {
+        return {
+            type: NODE_KIND.REGEX,
+            value: value
+        }
+    }
+    
+    function build_matcher_boolean(value) {
+        return {
+            type: NODE_KIND.BOOLEAN,
+            value: value
+        }
+    }
+
+    function build_matcher_null() {
+        return {
+            type: NODE_KIND.NULL
+        }        
+    }
+
+    function build_matcher_any() {
+        return {
+            type: NODE_KIND.ANY
+        }
+    }
+
+    function build_matcher_object_any() {
+        return {
+            type: NODE_KIND.OBJECT_ANY
+        }
+    }
+    
+    function build_matcher_pair(key, value) {
+        return {
+            type: NODE_KIND.PAIR,
+            key: key,
+            value: value
+        }
+    }
+
+    function build_matcher_object(pairs) {
+        return {
+            type: NODE_KIND.OBJECT,
+            pairs: pairs
+        }
+    }
+    
+    function build_matcher_list_empty() {
+        return {
+            type: NODE_KIND.LIST_EMPTY
+        }
+    }
+    
+    function build_matcher_list_any() {
+        return {
+            type: NODE_KIND.LIST_ANY
+        }
+    }
+    
+    function build_matcher_find_span(expr) {
+        return {
+            type: NODE_KIND.FIND_SPAN,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_item(expr) {
+        return {
+            type: NODE_KIND.ITEM,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_span(items, strict) {
+        return {
+            type: NODE_KIND.SPAN,
+            items: items,
+            strict: strict
+        }
+    }
+    
+    function build_matcher_list(segments) {
+        return {
+            type: NODE_KIND.LIST,
+            segments: segments
+        }        
+    }
+    
+    function build_matcher_iterable_any() {
+        return {
+            type: NODE_KIND.ITERABLE_ANY
+        }
+    }
+
+    function build_matcher_iterable(exprs, strict) {
+        return {
+            type: NODE_KIND.ITERABLE,
+            items: exprs,
+            strict: strict
+        }
+    }
+    
+    function build_matcher_descendant(exprs, strict) {
+        return {
+            type: NODE_KIND.DESCENDANT,
+            items: exprs,
+            strict: strict
+        }
+    }
+
+    function build_matcher_capture(name, expr) {
+        return {
+            type: NODE_KIND.CAPTURE,
+            name: name,
+            expr: expr
+        }
+    }
+    
+    function build_matcher_inject(name, typename) {
+        return {
+            type: NODE_KIND.INJECT,
+            name: name,
+            typename: typename
+        }
+    }
+    
+    return {
+        NODE_KIND:                  NODE_KIND,
+        node_kind_to_string:        node_kind_to_string,
+        build_matcher_number:       build_matcher_number,
+        build_matcher_string:       build_matcher_string,
+        build_matcher_regex:        build_matcher_regex,
+        build_matcher_boolean:      build_matcher_boolean,
+        build_matcher_null:         build_matcher_null,
+        build_matcher_any:          build_matcher_any,
+        build_matcher_object_any:   build_matcher_object_any,
+        build_matcher_pair:         build_matcher_pair,
+        build_matcher_object:       build_matcher_object,
+        build_matcher_list_empty:   build_matcher_list_empty,
+        build_matcher_list_any:     build_matcher_list_any,
+        build_matcher_find_span:    build_matcher_find_span,
+        build_matcher_item:         build_matcher_item,
+        build_matcher_span:         build_matcher_span,
+        build_matcher_list:         build_matcher_list,
+        build_matcher_iterable_any: build_matcher_iterable_any,
+        build_matcher_iterable:     build_matcher_iterable,
+        build_matcher_descendant:   build_matcher_descendant,
+        build_matcher_capture:      build_matcher_capture,
+        build_matcher_inject:       build_matcher_inject
+    }
+})()
+
+},{}],2:[function(require,module,exports){
+module.exports = (function() {
     function build_matching_result(status, captures) {
         return {status: status,
                 captures: captures};
@@ -535,7 +736,143 @@ module.exports = (function() {
     };
 })();
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
+module.exports = (function() {
+    var ast = require('./ast.js'),
+        builders = require('./builders.js'),
+        generators = {}
+
+    function generate(ast) {
+        return (generators[ast.type] || generate_boom)(ast)
+    }
+
+    function generate_number(ast) {
+        return builders.build_matcher_number(ast.value)
+    }
+    
+    function generate_string(ast) {
+        return builders.build_matcher_string(ast.value)
+    }
+    
+    function generate_regex(ast) {
+        return builders.build_matcher_regex(ast.value)
+    }
+    
+    function generate_boolean(ast) {
+        return builders.build_matcher_boolean(ast.value)
+    }
+    
+    function generate_null(ast) {
+        return builders.build_matcher_null()
+    }
+    
+    function generate_any(ast) {
+        return builders.build_matcher_any()
+    }
+    
+    function generate_object_any(ast) {
+        return builders.build_matcher_object_any()
+    }
+    
+    function generate_pair(ast) {
+        return builders.build_matcher_pair(generate(ast.key), generate(ast.value))
+    }
+    
+    function generate_object(ast) {
+        var pms = ast.pairs.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_object(pms)
+    }
+    
+    function generate_list_empty(ast) {
+        return builders.build_matcher_list_empty()
+    }
+    
+    function generate_list_any(ast) {
+        return builders.build_matcher_list_any()
+    }
+    
+    function generate_find_span(ast) {
+        return builders.build_matcher_find_span(generate(ast.expr))
+    }
+    
+    function generate_item(ast) {
+        return builders.build_matcher_item(generate(ast.expr))
+    }
+    
+    function generate_span(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_span(ims, ast.strict)
+    }
+    
+    function generate_list(ast) {
+        var sms = ast.segments.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_list(sms)
+    }
+    
+    function generate_iterable_any(ast) {
+        return builders.build_matcher_iterable_any()
+    }
+    
+    function generate_iterable(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_iterable(ims, ast.strict)
+    }
+    
+    function generate_descendant(ast) {
+        var ims = ast.items.map(function(p) {
+            return generate(p)
+        })
+        return builders.build_matcher_descendant(ims, ast.strict)
+    }
+    
+    function generate_capture(ast) {
+        return builders.build_matcher_capture(ast.name, generate(ast.expr))
+    }
+    
+    function generate_inject(ast) {
+        return builders.build_matcher_inject(ast.name, ast.typename)
+    }
+
+    generators[ast.NODE_KIND.NUMBER] =          generate_number
+    generators[ast.NODE_KIND.STRING] =          generate_string
+    generators[ast.NODE_KIND.REGEX] =           generate_regex
+    generators[ast.NODE_KIND.BOOLEAN] =         generate_boolean
+    generators[ast.NODE_KIND.NULL] =            generate_null
+    generators[ast.NODE_KIND.ANY] =             generate_any
+    generators[ast.NODE_KIND.OBJECT_ANY] =      generate_object_any
+    generators[ast.NODE_KIND.PAIR] =            generate_pair
+    generators[ast.NODE_KIND.OBJECT] =          generate_object
+    generators[ast.NODE_KIND.LIST_EMPTY] =      generate_list_empty
+    generators[ast.NODE_KIND.LIST_ANY] =        generate_list_any
+    generators[ast.NODE_KIND.FIND_SPAN] =       generate_find_span
+    generators[ast.NODE_KIND.ITEM] =            generate_item
+    generators[ast.NODE_KIND.SPAN] =            generate_span
+    generators[ast.NODE_KIND.LIST] =            generate_list
+    generators[ast.NODE_KIND.ITERABLE_ANY] =    generate_iterable_any
+    generators[ast.NODE_KIND.ITERABLE] =        generate_iterable
+    generators[ast.NODE_KIND.DESCENDANT] =      generate_descendant
+    generators[ast.NODE_KIND.CAPTURE] =         generate_capture
+    generators[ast.NODE_KIND.INJECT] =          generate_inject
+
+    function generate_boom(ast) {
+        throw "no generator for node of type " + ast.type // <== 
+    }
+
+    return  {
+        generate: generate
+    }
+})()
+
+
+},{"./ast.js":1,"./builders.js":2}],4:[function(require,module,exports){
 module.exports = (function() {
   /*
    * Generated by PEG.js 0.8.0.
@@ -579,8 +916,8 @@ module.exports = (function() {
         peg$c6 = { type: "literal", value: ">", description: "\">\"" },
         peg$c7 = ")",
         peg$c8 = { type: "literal", value: ")", description: "\")\"" },
-        peg$c9 = function(name, matcher) { return builders.build_matcher_capture(name, matcher); },
-        peg$c10 = function(expr) { return expr; },
+        peg$c9 = function(name, matcher) { return builders.build_matcher_capture(name, matcher) },
+        peg$c10 = function(expr) { return expr },
         peg$c11 = [],
         peg$c12 = /^[a-zA-Z_0-9]/,
         peg$c13 = { type: "class", value: "[a-zA-Z_0-9]", description: "[a-zA-Z_0-9]" },
@@ -588,119 +925,119 @@ module.exports = (function() {
         peg$c15 = { type: "literal", value: "{", description: "\"{\"" },
         peg$c16 = "}",
         peg$c17 = { type: "literal", value: "}", description: "\"}\"" },
-        peg$c18 = function() { return builders.build_matcher_object_any(); },
+        peg$c18 = function() { return builders.build_matcher_object_any() },
         peg$c19 = ",",
         peg$c20 = { type: "literal", value: ",", description: "\",\"" },
         peg$c21 = function(head, tail) {
                     var pairMatchers = tail.reduce(function(acc, item) {
-                        return acc.concat(item[2]);
-                    }, [head]);
-                    return builders.build_matcher_object(pairMatchers);
+                        return acc.concat(item[2])
+                    }, [head])
+                    return builders.build_matcher_object(pairMatchers)
                 },
         peg$c22 = "[",
         peg$c23 = { type: "literal", value: "[", description: "\"[\"" },
         peg$c24 = "]",
         peg$c25 = { type: "literal", value: "]", description: "\"]\"" },
-        peg$c26 = function() { return builders.build_matcher_list_empty(); },
+        peg$c26 = function() { return builders.build_matcher_list_empty() },
         peg$c27 = "*",
         peg$c28 = { type: "literal", value: "*", description: "\"*\"" },
-        peg$c29 = function() { return builders.build_matcher_list_any(); },
+        peg$c29 = function() { return builders.build_matcher_list_any() },
         peg$c30 = function(s) {
-                  return builders.build_matcher_list([builders.build_matcher_span(s, true)]);
+                  return builders.build_matcher_list([builders.build_matcher_span(s, true)])
                 },
         peg$c31 = function(s) {
-                  return builders.build_matcher_list([builders.build_matcher_span(s, false)]);
+                  return builders.build_matcher_list([builders.build_matcher_span(s, false)])
                 },
         peg$c32 = function(s, t) {
                   var r = [builders.build_matcher_span(s, false)]
-                  return builders.build_matcher_list(r.concat(t));
+                  return builders.build_matcher_list(r.concat(t))
                 },
         peg$c33 = function(t) {
-                  return builders.build_matcher_list(t);
+                  return builders.build_matcher_list(t)
                 },
         peg$c34 = "<",
         peg$c35 = { type: "literal", value: "<", description: "\"<\"" },
-        peg$c36 = function() { return builders.build_matcher_iterable_any(); },
+        peg$c36 = function() { return builders.build_matcher_iterable_any() },
         peg$c37 = "<!",
         peg$c38 = { type: "literal", value: "<!", description: "\"<!\"" },
         peg$c39 = "!>/g",
         peg$c40 = { type: "literal", value: "!>/g", description: "\"!>/g\"" },
         peg$c41 = function(head, tail) {
                     var matchers = tail.reduce(function(acc, item) {
-                        return acc.concat(item[2]);
-                    }, [head]);
-                    return builders.build_matcher_descendant(matchers, true);
+                        return acc.concat(item[2])
+                    }, [head])
+                    return builders.build_matcher_descendant(matchers, true)
                 },
         peg$c42 = "!>",
         peg$c43 = { type: "literal", value: "!>", description: "\"!>\"" },
         peg$c44 = function(head, tail) {
                     var matchers = tail.reduce(function(acc, item) {
-                        return acc.concat(item[2]);
-                    }, [head]);
-                    return builders.build_matcher_descendant(matchers, false);
+                        return acc.concat(item[2])
+                    }, [head])
+                    return builders.build_matcher_descendant(matchers, false)
                 },
         peg$c45 = ">/g",
         peg$c46 = { type: "literal", value: ">/g", description: "\">/g\"" },
         peg$c47 = function(head, tail) {
                     var matchers = tail.reduce(function(acc, item) {
-                        return acc.concat(item[2]);
-                    }, [head]);
-                    return builders.build_matcher_iterable(matchers, true);
+                        return acc.concat(item[2])
+                    }, [head])
+                    return builders.build_matcher_iterable(matchers, true)
                 },
         peg$c48 = function(head, tail) {
                     var matchers = tail.reduce(function(acc, item) {
-                        return acc.concat(item[2]);
-                    }, [head]);
-                    return builders.build_matcher_iterable(matchers, false);
+                        return acc.concat(item[2])
+                    }, [head])
+                    return builders.build_matcher_iterable(matchers, false)
                 },
         peg$c49 = "_",
         peg$c50 = { type: "literal", value: "_", description: "\"_\"" },
-        peg$c51 = function() { return builders.build_matcher_any(); },
+        peg$c51 = function() { return builders.build_matcher_any() },
         peg$c52 = "true",
         peg$c53 = { type: "literal", value: "true", description: "\"true\"" },
-        peg$c54 = function() { return builders.build_matcher_boolean(true); },
+        peg$c54 = function() { return builders.build_matcher_boolean(true) },
         peg$c55 = "false",
         peg$c56 = { type: "literal", value: "false", description: "\"false\"" },
-        peg$c57 = function() { return builders.build_matcher_boolean(false); },
+        peg$c57 = function() { return builders.build_matcher_boolean(false) },
         peg$c58 = "null",
         peg$c59 = { type: "literal", value: "null", description: "\"null\"" },
-        peg$c60 = function() { return builders.build_matcher_null(); },
-        peg$c61 = function(number) { return builders.build_matcher_number(parseFloat(number)); },
-        peg$c62 = function(string) { return builders.build_matcher_string(string); },
-        peg$c63 = function(regex) { return builders.build_matcher_regex(regex); },
+        peg$c60 = function() { return builders.build_matcher_null() },
+        peg$c61 = function(number) { return builders.build_matcher_number(parseFloat(number)) },
+        peg$c62 = function(string) { return builders.build_matcher_string(string) },
+        peg$c63 = function(regex) { return builders.build_matcher_regex(regex) },
         peg$c64 = "!<",
         peg$c65 = { type: "literal", value: "!<", description: "\"!<\"" },
-        peg$c66 = function(name, typename) { return builders.build_matcher_inject(name, typename); },
+        peg$c66 = function(name, typename) { return builders.build_matcher_inject(name, typename) },
         peg$c67 = ":",
         peg$c68 = { type: "literal", value: ":", description: "\":\"" },
-        peg$c69 = function(key, valueMatcher) { var keyMatcher = builders.build_matcher_string(key);
-                  return builders.build_matcher_pair(keyMatcher, valueMatcher); },
-        peg$c70 = function(key) { var keyMatcher = builders.build_matcher_string(key);
-                  return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()); },
-        peg$c71 = function(valueMatcher) { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher); },
+        peg$c69 = function(key, valueMatcher) { var keyMatcher = builders.build_matcher_string(key)
+                  return builders.build_matcher_pair(keyMatcher, valueMatcher) },
+        peg$c70 = function(key) { var keyMatcher = builders.build_matcher_string(key)
+                  return builders.build_matcher_pair(keyMatcher, builders.build_matcher_any()) },
+        peg$c71 = function(valueMatcher) { return builders.build_matcher_pair(builders.build_matcher_any(), valueMatcher) },
         peg$c72 = function(h, t) {
                   return t.reduce(function(acc, item) {
-                    acc.push(builders.build_matcher_item(item[3]));
-                    return acc;
-                  }, [builders.build_matcher_item(h)]);
+                    acc.push(builders.build_matcher_item(item[3]))
+                    return acc
+                  }, [builders.build_matcher_item(h)])
                 },
         peg$c73 = null,
         peg$c74 = function(h, t, loose) {
                   var m = t.reduce(function(acc, item) {
-                    acc.push(item[3]);
-                    return acc;
-                  }, [h]);
+                    acc.push(item[3])
+                    return acc
+                  }, [h])
 
                   return m.reduce(function(acc, item, idx, a) {
                     var last = (idx == a.length - 1),
                         strict = last && (loose == null)
                     var sm = builders.build_matcher_span(item, strict)
-                    acc.push(builders.build_matcher_find_span(sm));
-                    return acc;
-                  }, []);
+                    acc.push(builders.build_matcher_find_span(sm))
+                    return acc
+                  }, [])
                 },
         peg$c75 = function(s) {
-                  return s;
+                  return s
                 },
         peg$c76 = "-",
         peg$c77 = { type: "literal", value: "-", description: "\"-\"" },
@@ -716,10 +1053,10 @@ module.exports = (function() {
         peg$c87 = { type: "class", value: "[+\\-]", description: "[+\\-]" },
         peg$c88 = "\"",
         peg$c89 = { type: "literal", value: "\"", description: "\"\\\"\"" },
-        peg$c90 = function(chars) { return chars; },
+        peg$c90 = function(chars) { return chars },
         peg$c91 = "#",
         peg$c92 = { type: "literal", value: "#", description: "\"#\"" },
-        peg$c93 = function(string) { return string; },
+        peg$c93 = function(string) { return string },
         peg$c94 = "string",
         peg$c95 = { type: "literal", value: "string", description: "\"string\"" },
         peg$c96 = "number",
@@ -728,35 +1065,35 @@ module.exports = (function() {
         peg$c99 = { type: "literal", value: "boolean", description: "\"boolean\"" },
         peg$c100 = "regex",
         peg$c101 = { type: "literal", value: "regex", description: "\"regex\"" },
-        peg$c102 = function(chars) { return chars.join(""); },
+        peg$c102 = function(chars) { return chars.join("") },
         peg$c103 = "\\n",
         peg$c104 = { type: "literal", value: "\\n", description: "\"\\\\n\"" },
-        peg$c105 = function() { return '\n'; },
+        peg$c105 = function() { return '\n' },
         peg$c106 = "\\r",
         peg$c107 = { type: "literal", value: "\\r", description: "\"\\\\r\"" },
-        peg$c108 = function() { return '\r'; },
+        peg$c108 = function() { return '\r' },
         peg$c109 = "\\t",
         peg$c110 = { type: "literal", value: "\\t", description: "\"\\\\t\"" },
-        peg$c111 = function() { return '\t'; },
+        peg$c111 = function() { return '\t' },
         peg$c112 = "\\b",
         peg$c113 = { type: "literal", value: "\\b", description: "\"\\\\b\"" },
-        peg$c114 = function() { return '\b'; },
+        peg$c114 = function() { return '\b' },
         peg$c115 = "\\f",
         peg$c116 = { type: "literal", value: "\\f", description: "\"\\\\f\"" },
-        peg$c117 = function() { return '\f'; },
+        peg$c117 = function() { return '\f' },
         peg$c118 = "\\s",
         peg$c119 = { type: "literal", value: "\\s", description: "\"\\\\s\"" },
-        peg$c120 = function() { return '\s'; },
+        peg$c120 = function() { return '\s' },
         peg$c121 = "\\\\",
         peg$c122 = { type: "literal", value: "\\\\", description: "\"\\\\\\\\\"" },
-        peg$c123 = function() { return '\\'; },
+        peg$c123 = function() { return '\\' },
         peg$c124 = "\\\"",
         peg$c125 = { type: "literal", value: "\\\"", description: "\"\\\\\\\"\"" },
-        peg$c126 = function() { return '\"'; },
+        peg$c126 = function() { return '\"' },
         peg$c127 = void 0,
         peg$c128 = "\\",
         peg$c129 = { type: "literal", value: "\\", description: "\"\\\\\"" },
-        peg$c130 = function(char) { return char; },
+        peg$c130 = function(char) { return char },
         peg$c131 = { type: "any", description: "any character" },
         peg$c132 = "\\u",
         peg$c133 = { type: "literal", value: "\\u", description: "\"\\\\u\"" },
@@ -3406,7 +3743,7 @@ module.exports = (function() {
     }
 
 
-        var builders = require('./builders.js');
+        var builders = require('./ast.js')
 
 
     peg$result = peg$startRuleFunction();
@@ -3428,20 +3765,28 @@ module.exports = (function() {
   };
 })();
 
-},{"./builders.js":1}],"jjpet":[function(require,module,exports){
+},{"./ast.js":1}],"jjpet":[function(require,module,exports){
 module.exports = (function() {
-    var builders = require('./builders.js');
-    var parser = require('./spec.js');
+    var parser = require('./spec.js'),
+        generator = require('./generator.js')
+
     return {
+        parse: function(pattern) {
+            return parser.parse(pattern) // <== 
+        },
+        
+        generate: function(ast) {
+            return generator.generate(ast) // <== 
+        },
+
         compile: function(pattern) {
-            var matcher = parser.parse(pattern);
-            return matcher; // <== 
+            return generator.generate(parser.parse(pattern)) // <== 
         },
         
         run: function(json, matcher, params) {
-            return matcher(json, params || {}); // <== 
+            return matcher(json, params || {}) // <== 
         }
     }
-})();
+})()
 
-},{"./builders.js":1,"./spec.js":2}]},{},[]);
+},{"./generator.js":3,"./spec.js":4}]},{},[]);

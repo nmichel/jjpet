@@ -1,4 +1,4 @@
-#jjpet
+# jjpet
 
 Matching JSON nodes in javascript.
 
@@ -7,7 +7,7 @@ jjpet is a javascript port of Erlang [ejpet](https://github.com/nmichel/ejpet).
 [![Build Status](https://travis-ci.org/nmichel/jjpet.png)](https://travis-ci.org/nmichel/jjpet)
 
 
-#What for ?
+# What for ?
 
 Kind of regular expression applied to JSON documents.
 
@@ -16,7 +16,7 @@ Kind of regular expression applied to JSON documents.
 * Efficient filtering of JSON nodes in real time.
 
 
-#Quick start
+# Quick start
 
 Install (using npm)
 
@@ -41,17 +41,20 @@ undefined
 { status: true, captures: {} }
 ```
 
-
-#How ?
+# How ?
 
 Express what you want to match using a simple expression language.
 
-
-##Expression syntax
+## Expression syntax
 
 See [ejpet expressions](https://github.com/nmichel/ejpet/blob/master/README.md#expression-syntax)
 
-##Captures
+## AST
+
+```jjpet``` module exposes ```parse(pattern)``` which returns the AST build from ```pattern```. Use it to transform the AST built
+from a pattern expression, and then use function ```generate(ast)``` to produce the corresponding  match function.
+
+## Captures
 
 API function `jjpet.run` returns captures as an object where keys are capture names found in the pattern, and values are arrays
  of matched JSON subparts.
@@ -66,7 +69,7 @@ undefined
   captures: { c1: [ 42 ], c2: [ 43 ] } }
 ```
 
-##Injections
+## Injections
 
 It is possible to provide some matching values at match-time, through parameter injection forms like `(!<param_name>param_type)`, where `param_type` may be `number`, `string`, `boolean` and `regex`.
 API function `ejpet.run` allows for passing parameter values as an array which keys are parameter names, and values are parameter values.
@@ -84,7 +87,7 @@ undefined
 { status: false, captures: {} }
 ```
 
-##Captures AND injections
+## Captures AND injections
 
 `jjpet` allows combination of both captures and injections.
 

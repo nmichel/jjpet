@@ -1,3 +1,10 @@
+# 0.3.0
+
+### New feature(s)
+* Add 2 new API functions into ```jjpet``` module
+    * ```parse(pattern)``` return the AST built from ```pattern```
+    * ```generate(ast)``` produce the matching function from ```ast```
+
 # 0.2.1
 
 ### New feature(s)
